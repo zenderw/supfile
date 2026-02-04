@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: supfile-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-supfile}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-supfile}
+      POSTGRES_DB: ${POSTGRES_DB:-supfile}
+    ports:
+      - "5432:5432"
+    volumes:
+      - supfile_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-supfile}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  supfile_pg_data:
+    name: supfile_pg_data
