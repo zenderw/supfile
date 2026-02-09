@@ -1,0 +1,21 @@
+{
+  "name": "supfile",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Plateforme de stockage cloud SUPFile",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "api": "pnpm --filter @supfile/api",
+    "web": "pnpm --filter @supfile/web",
+    "mobile": "pnpm --filter @supfile/mobile",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4"
+  }
+}
