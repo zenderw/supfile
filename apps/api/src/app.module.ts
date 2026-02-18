@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
 import { AppController } from './app.controller';
+import { EnvConfig } from './config/env.config';
 import { validateEnv } from './config/env.validation';
 
 @Module({
@@ -13,5 +14,6 @@ import { validateEnv } from './config/env.validation';
     }),
   ],
   controllers: [AppController],
+  providers: [EnvConfig],
 })
 export class AppModule {}
