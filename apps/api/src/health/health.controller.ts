@@ -8,7 +8,7 @@ export class HealthController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  check(): HealthStatus {
+  async check(): Promise<HealthStatus> {
     return this.health.check();
   }
 }
