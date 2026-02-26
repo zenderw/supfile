@@ -16,4 +16,12 @@ export class EnvConfig {
   get JWT_SECRET(): string {
     return this.config.getOrThrow<string>('JWT_SECRET');
   }
+
+  get JWT_ACCESS_TTL(): number {
+    return Number(this.config.getOrThrow<string>('JWT_ACCESS_TTL'));
+  }
+
+  get JWT_REFRESH_TTL(): number {
+    return Number(this.config.getOrThrow<string>('JWT_REFRESH_TTL'));
+  }
 }
