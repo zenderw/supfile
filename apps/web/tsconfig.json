@@ -5,6 +5,7 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "moduleResolution": "bundler",
     "noEmit": true,
+    "declaration": false,
     "useDefineForClassFields": true,
     "allowImportingTsExtensions": true,
     "baseUrl": ".",
