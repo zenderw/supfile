@@ -3,7 +3,6 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 
 import { AppController } from './app.controller';
-import { AuthModule } from './auth/auth.module';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { EnvConfig } from './config/env.config';
 import { validateEnv } from './config/env.validation';
@@ -19,7 +18,6 @@ import { PrismaModule } from './prisma/prisma.module';
     }),
     PrismaModule,
     HealthModule,
-    AuthModule,
   ],
   controllers: [AppController],
   providers: [
