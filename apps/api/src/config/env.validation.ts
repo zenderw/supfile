@@ -14,6 +14,12 @@ class EnvSchema {
     message: 'JWT_SECRET doit contenir au moins 32 caractères',
   })
   JWT_SECRET!: string;
+
+  @IsInt()
+  JWT_ACCESS_TTL!: number;
+
+  @IsInt()
+  JWT_REFRESH_TTL!: number;
 }
 
 export function validateEnv(raw: Record<string, unknown>): EnvSchema {
