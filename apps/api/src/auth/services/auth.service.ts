@@ -9,7 +9,7 @@ import { RegisterDto } from '../dto/register.dto';
 import { HashService } from './hash.service';
 import { TokenService } from './token.service';
 
-interface AuthResult {
+export interface AuthResult {
   user: UserShared;
   accessToken: string;
   refreshToken: string;
