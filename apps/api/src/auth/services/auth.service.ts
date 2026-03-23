@@ -70,6 +70,41 @@ export class AuthService {
     return { user: this.toShared(user), ...tokens };
   }
 
+  async refresh(refreshToken: string): Promise<AuthResult> {
+    let payload;
+    try {
+      payload = await this.tokens.verifyRefresh(refreshToken);
+    } catch {
+      throw new UnauthorizedException({
+        code: ErrorCode.TOKEN_INVALID,
+        message: 'Refresh token invalide ou expiré',
+      });
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: payload.sub },
+    });
+    if (!user) {
+      throw new UnauthorizedException({
+        code: ErrorCode.TOKEN_INVALID,
+        message: 'Utilisateur introuvable',
+      });
+    }
+
+    const tokens = await this.tokens.issuePair(user.id, user.email);
+    return { user: this.toShared(user), ...tokens };
+  }
+
+  async getCurrentUser(userId: string): Promise<UserShared> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+    if (!user) {
+      throw new UnauthorizedException();
+    }
+    return this.toShared(user);
+  }
+
   private toShared(user: {
     id: string;
     email: string;
