@@ -1,5 +1,11 @@
-import { ErrorCode } from '@supfile/shared';
 import axios from 'axios';
+
+const ErrorCode = {
+  EMAIL_ALREADY_USED: 'EMAIL_ALREADY_USED',
+  INVALID_CREDENTIALS: 'INVALID_CREDENTIALS',
+  TOKEN_EXPIRED: 'TOKEN_EXPIRED',
+  TOKEN_INVALID: 'TOKEN_INVALID',
+} as const;
 
 interface ApiError {
   code?: string;
