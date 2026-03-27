@@ -17,4 +17,14 @@ export const authApi = {
     const { data } = await api.post<AuthResponse>('/auth/login', input);
     return data;
   },
+  async refresh(refreshToken: string) {
+    const { data } = await api.post<AuthResponse>('/auth/refresh', {
+      refreshToken,
+    });
+    return data;
+  },
+  async me() {
+    const { data } = await api.get<User>('/auth/me');
+    return data;
+  },
 };
