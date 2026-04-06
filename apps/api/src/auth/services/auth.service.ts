@@ -5,6 +5,7 @@ import type { User as UserShared } from '@supfile/shared';
 import { PrismaService } from '../../prisma/prisma.service';
 import { LoginDto } from '../dto/login.dto';
 import { RegisterDto } from '../dto/register.dto';
+import type { GoogleProfileLite } from '../strategies/google.strategy';
 
 import { HashService } from './hash.service';
 import { TokenService } from './token.service';
@@ -89,6 +90,48 @@ export class AuthService {
         code: ErrorCode.TOKEN_INVALID,
         message: 'Utilisateur introuvable',
       });
+    }
+
+    const tokens = await this.tokens.issuePair(user.id, user.email);
+    return { user: this.toShared(user), ...tokens };
+  }
+
+  async loginOrCreateOAuth(provider: string, profile: GoogleProfileLite): Promise<AuthResult> {
+    const oauthAccount = await this.prisma.oAuthAccount.findUnique({
+      where: {
+        provider_providerId: { provider, providerId: profile.providerId },
+      },
+      include: { user: true },
+    });
+
+    let user = oauthAccount?.user;
+
+    if (!user) {
+      const existingByEmail = await this.prisma.user.findUnique({
+        where: { email: profile.email },
+      });
+
+      if (existingByEmail) {
+        await this.prisma.oAuthAccount.create({
+          data: {
+            provider,
+            providerId: profile.providerId,
+            userId: existingByEmail.id,
+          },
+        });
+        user = existingByEmail;
+      } else {
+        user = await this.prisma.user.create({
+          data: {
+            email: profile.email,
+            displayName: profile.displayName,
+            avatarUrl: profile.avatarUrl,
+            oauthAccounts: {
+              create: { provider, providerId: profile.providerId },
+            },
+          },
+        });
+      }
     }
 
     const tokens = await this.tokens.issuePair(user.id, user.email);
