@@ -15,6 +15,7 @@ import type { Request, Response } from 'express';
 import { EnvConfig } from '../config/env.config';
 
 import { CurrentUser } from './decorators/current-user.decorator';
+import { GoogleMobileDto } from './dto/google-mobile.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshDto } from './dto/refresh.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -70,5 +71,11 @@ export class AuthController {
     redirectUrl.searchParams.set('refreshToken', result.refreshToken);
 
     res.redirect(redirectUrl.toString());
+  }
+
+  @Post('google/mobile')
+  @HttpCode(HttpStatus.OK)
+  googleMobile(@Body() dto: GoogleMobileDto) {
+    return this.auth.loginWithGoogleIdToken(dto.idToken);
   }
 }

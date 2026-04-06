@@ -1,7 +1,9 @@
 import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ErrorCode } from '@supfile/shared';
 import type { User as UserShared } from '@supfile/shared';
+import { OAuth2Client } from 'google-auth-library';
 
+import { EnvConfig } from '../../config/env.config';
 import { PrismaService } from '../../prisma/prisma.service';
 import { LoginDto } from '../dto/login.dto';
 import { RegisterDto } from '../dto/register.dto';
@@ -22,6 +24,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly hash: HashService,
     private readonly tokens: TokenService,
+    private readonly env: EnvConfig,
   ) {}
 
   async register(dto: RegisterDto): Promise<AuthResult> {
@@ -136,6 +139,37 @@ export class AuthService {
 
     const tokens = await this.tokens.issuePair(user.id, user.email);
     return { user: this.toShared(user), ...tokens };
+  }
+
+  async loginWithGoogleIdToken(idToken: string): Promise<AuthResult> {
+    const client = new OAuth2Client();
+    let payload;
+    try {
+      const ticket = await client.verifyIdToken({
+        idToken,
+        audience: this.env.GOOGLE_CLIENT_ID,
+      });
+      payload = ticket.getPayload();
+    } catch {
+      throw new UnauthorizedException({
+        code: ErrorCode.TOKEN_INVALID,
+        message: 'Token Google invalide',
+      });
+    }
+
+    if (!payload?.sub || !payload.email) {
+      throw new UnauthorizedException({
+        code: ErrorCode.TOKEN_INVALID,
+        message: 'Token Google sans identifiant',
+      });
+    }
+
+    return this.loginOrCreateOAuth('google', {
+      providerId: payload.sub,
+      email: payload.email,
+      displayName: payload.name ?? payload.email.split('@')[0],
+      avatarUrl: payload.picture ?? null,
+    });
   }
 
   async getCurrentUser(userId: string): Promise<UserShared> {

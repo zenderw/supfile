@@ -22,6 +22,8 @@ export default function RootLayout() {
         }}
       >
         <Stack.Screen name="index" options={{ title: 'SUPFile' }} />
+        <Stack.Screen name="login" options={{ title: 'Connexion', headerBackVisible: false }} />
+        <Stack.Screen name="register" options={{ title: 'Inscription' }} />
       </Stack>
     </QueryClientProvider>
   );
