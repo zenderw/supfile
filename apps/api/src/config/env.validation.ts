@@ -1,5 +1,5 @@
 import { plainToInstance } from 'class-transformer';
-import { IsInt, IsOptional, IsString, IsUrl, MinLength, validateSync } from 'class-validator';
+import { IsInt, IsString, MinLength, validateSync } from 'class-validator';
 
 class EnvSchema {
   @IsInt()
@@ -20,22 +20,6 @@ class EnvSchema {
 
   @IsInt()
   JWT_REFRESH_TTL!: number;
-
-  @IsOptional()
-  @IsString()
-  GOOGLE_CLIENT_ID?: string;
-
-  @IsOptional()
-  @IsString()
-  GOOGLE_CLIENT_SECRET?: string;
-
-  @IsOptional()
-  @IsUrl({ require_tld: false })
-  GOOGLE_CALLBACK_URL?: string;
-
-  @IsOptional()
-  @IsUrl({ require_tld: false })
-  WEB_OAUTH_REDIRECT_URL?: string;
 }
 
 export function validateEnv(raw: Record<string, unknown>): EnvSchema {
