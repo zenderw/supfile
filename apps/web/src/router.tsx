@@ -6,9 +6,11 @@ import { MainLayout } from '@/layouts/MainLayout';
 import { HomePage } from '@/pages/HomePage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { LoginPage } from '@/pages/auth/LoginPage';
+import { OAuthCallbackPage } from '@/pages/auth/OAuthCallbackPage';
 import { RegisterPage } from '@/pages/auth/RegisterPage';
 
 const routes: RouteObject[] = [
+  { path: '/auth/oauth-callback', element: <OAuthCallbackPage /> },
   {
     element: <RequireAnon />,
     children: [
