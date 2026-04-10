@@ -1,7 +1,6 @@
 import { FolderIcon, HomeIcon, SearchIcon, SettingsIcon, ShareIcon } from 'lucide-react';
 import { NavLink, Outlet } from 'react-router-dom';
 
-import { UserMenu } from '@/components/UserMenu';
 import { cn } from '@/lib/utils';
 
 const navItems = [
@@ -38,14 +37,9 @@ export function MainLayout() {
           ))}
         </nav>
       </aside>
-      <div className="flex-1 flex flex-col">
-        <header className="border-b px-8 py-3 flex justify-end">
-          <UserMenu />
-        </header>
-        <main className="flex-1 p-8">
-          <Outlet />
-        </main>
-      </div>
+      <main className="flex-1 p-8">
+        <Outlet />
+      </main>
     </div>
   );
 }

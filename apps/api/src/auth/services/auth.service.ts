@@ -1,10 +1,13 @@
 import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ErrorCode } from '@supfile/shared';
 import type { User as UserShared } from '@supfile/shared';
+import { OAuth2Client } from 'google-auth-library';
 
+import { EnvConfig } from '../../config/env.config';
 import { PrismaService } from '../../prisma/prisma.service';
 import { LoginDto } from '../dto/login.dto';
 import { RegisterDto } from '../dto/register.dto';
+import type { GoogleProfileLite } from '../strategies/google.strategy';
 
 import { HashService } from './hash.service';
 import { TokenService } from './token.service';
@@ -21,6 +24,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly hash: HashService,
     private readonly tokens: TokenService,
+    private readonly env: EnvConfig,
   ) {}
 
   async register(dto: RegisterDto): Promise<AuthResult> {
@@ -93,6 +97,79 @@ export class AuthService {
 
     const tokens = await this.tokens.issuePair(user.id, user.email);
     return { user: this.toShared(user), ...tokens };
+  }
+
+  async loginOrCreateOAuth(provider: string, profile: GoogleProfileLite): Promise<AuthResult> {
+    const oauthAccount = await this.prisma.oAuthAccount.findUnique({
+      where: {
+        provider_providerId: { provider, providerId: profile.providerId },
+      },
+      include: { user: true },
+    });
+
+    let user = oauthAccount?.user;
+
+    if (!user) {
+      const existingByEmail = await this.prisma.user.findUnique({
+        where: { email: profile.email },
+      });
+
+      if (existingByEmail) {
+        await this.prisma.oAuthAccount.create({
+          data: {
+            provider,
+            providerId: profile.providerId,
+            userId: existingByEmail.id,
+          },
+        });
+        user = existingByEmail;
+      } else {
+        user = await this.prisma.user.create({
+          data: {
+            email: profile.email,
+            displayName: profile.displayName,
+            avatarUrl: profile.avatarUrl,
+            oauthAccounts: {
+              create: { provider, providerId: profile.providerId },
+            },
+          },
+        });
+      }
+    }
+
+    const tokens = await this.tokens.issuePair(user.id, user.email);
+    return { user: this.toShared(user), ...tokens };
+  }
+
+  async loginWithGoogleIdToken(idToken: string): Promise<AuthResult> {
+    const client = new OAuth2Client();
+    let payload;
+    try {
+      const ticket = await client.verifyIdToken({
+        idToken,
+        audience: this.env.GOOGLE_CLIENT_ID,
+      });
+      payload = ticket.getPayload();
+    } catch {
+      throw new UnauthorizedException({
+        code: ErrorCode.TOKEN_INVALID,
+        message: 'Token Google invalide',
+      });
+    }
+
+    if (!payload?.sub || !payload.email) {
+      throw new UnauthorizedException({
+        code: ErrorCode.TOKEN_INVALID,
+        message: 'Token Google sans identifiant',
+      });
+    }
+
+    return this.loginOrCreateOAuth('google', {
+      providerId: payload.sub,
+      email: payload.email,
+      displayName: payload.name ?? payload.email.split('@')[0],
+      avatarUrl: payload.picture ?? null,
+    });
   }
 
   async getCurrentUser(userId: string): Promise<UserShared> {
