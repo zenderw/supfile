@@ -27,4 +27,10 @@ export const authApi = {
     const { data } = await api.get<User>('/auth/me');
     return data;
   },
+  async loginWithGoogleIdToken(idToken: string) {
+    const { data } = await api.post<AuthResponse>('/auth/google/mobile', {
+      idToken,
+    });
+    return data;
+  },
 };
