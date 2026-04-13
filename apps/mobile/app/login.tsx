@@ -5,9 +5,11 @@ import { useForm } from 'react-hook-form';
 import { Alert, KeyboardAvoidingView, Platform, Text, View } from 'react-native';
 
 import { FormField } from '@/components/FormField';
+import { GoogleButton } from '@/components/GoogleButton';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { authApi } from '@/lib/api/auth';
 import { extractErrorMessage } from '@/lib/api-error';
+import { startGoogleOAuth } from '@/lib/oauth';
 import { type LoginInput, loginSchema } from '@/lib/validators/auth';
 import { useAuthStore } from '@/stores/auth.store';
 
@@ -30,6 +32,17 @@ export default function LoginScreen() {
     },
   });
 
+  async function handleGoogle() {
+    try {
+      const { idToken } = await startGoogleOAuth();
+      const data = await authApi.loginWithGoogleIdToken(idToken);
+      setSession(data.user, data.accessToken, data.refreshToken);
+      router.replace('/');
+    } catch (err) {
+      Alert.alert('Connexion Google impossible', extractErrorMessage(err));
+    }
+  }
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -40,6 +53,14 @@ export default function LoginScreen() {
           <View>
             <Text className="text-2xl font-bold text-slate-900">Connexion</Text>
             <Text className="mt-1 text-sm text-slate-500">Accédez à votre espace SUPFile</Text>
+          </View>
+
+          <GoogleButton onPress={handleGoogle} />
+
+          <View className="flex-row items-center">
+            <View className="h-px flex-1 bg-slate-200" />
+            <Text className="mx-3 text-xs uppercase text-slate-400">ou</Text>
+            <View className="h-px flex-1 bg-slate-200" />
           </View>
 
           <View className="space-y-4">
