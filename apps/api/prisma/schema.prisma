@@ -20,6 +20,8 @@ model User {
   updatedAt    DateTime @updatedAt @map("updated_at")
 
   oauthAccounts OAuthAccount[]
+  folders       Folder[]
+  files         File[]
 
   @@map("users")
 }
@@ -38,4 +40,48 @@ model OAuthAccount {
   @@unique([provider, providerId])
   @@index([userId])
   @@map("oauth_accounts")
+}
+
+/// Dossier dans l'arborescence. parentId=null = racine du user.
+model Folder {
+  id        String    @id @default(uuid()) @db.Uuid
+  name      String
+  parentId  String?   @map("parent_id") @db.Uuid
+  ownerId   String    @map("owner_id") @db.Uuid
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  owner    User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  parent   Folder?  @relation("FolderHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
+  children Folder[] @relation("FolderHierarchy")
+  files    File[]
+
+  @@index([ownerId, parentId])
+  @@index([ownerId, deletedAt])
+  @@map("folders")
+}
+
+/// Fichier physique. storagePath est opaque, généré par StorageService.
+model File {
+  id          String    @id @default(uuid()) @db.Uuid
+  name        String
+  size        BigInt
+  mimeType    String    @map("mime_type")
+  storagePath String    @map("storage_path")
+  folderId    String?   @map("folder_id") @db.Uuid
+  ownerId     String    @map("owner_id") @db.Uuid
+
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  owner  User    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  folder Folder? @relation(fields: [folderId], references: [id], onDelete: Restrict)
+
+  @@index([ownerId, folderId])
+  @@index([ownerId, deletedAt])
+  @@index([ownerId, name])
+  @@map("files")
 }
