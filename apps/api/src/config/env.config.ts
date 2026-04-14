@@ -25,6 +25,10 @@ export class EnvConfig {
     return Number(this.config.getOrThrow<string>('JWT_REFRESH_TTL'));
   }
 
+  get STORAGE_PATH(): string {
+    return this.config.getOrThrow<string>('STORAGE_PATH');
+  }
+
   get GOOGLE_CLIENT_ID(): string {
     return this.config.getOrThrow<string>('GOOGLE_CLIENT_ID');
   }

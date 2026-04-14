@@ -21,6 +21,10 @@ class EnvSchema {
   @IsInt()
   JWT_REFRESH_TTL!: number;
 
+  @IsString()
+  @MinLength(1)
+  STORAGE_PATH!: string;
+
   @IsOptional()
   @IsString()
   GOOGLE_CLIENT_ID?: string;
