@@ -1,9 +1,13 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   ParseUUIDPipe,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -15,6 +19,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 import { CreateFolderDto } from './dto/create-folder.dto';
 import { ListFolderQuery } from './dto/list-folder.query';
+import { UpdateFolderDto } from './dto/update-folder.dto';
 import { FoldersService } from './folders.service';
 
 @Controller('folders')
@@ -38,5 +43,23 @@ export class FoldersController {
   @Post()
   create(@CurrentUser() user: JwtPayload, @Body() dto: CreateFolderDto) {
     return this.folders.create(user.sub, dto);
+  }
+
+  @Patch(':id')
+  update(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Body() dto: UpdateFolderDto,
+  ) {
+    return this.folders.update(user.sub, id, dto);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async remove(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+  ) {
+    await this.folders.softDelete(user.sub, id);
   }
 }
