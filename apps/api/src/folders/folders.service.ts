@@ -146,6 +146,53 @@ export class FoldersService {
     });
   }
 
+  async softDelete(userId: string, folderId: string): Promise<void> {
+    await this.assertOwnership(userId, folderId);
+    const now = new Date();
+    const descendants = await this.collectDescendants(folderId);
+    const allFolderIds = [folderId, ...descendants.folderIds];
+
+    await this.prisma.$transaction([
+      this.prisma.folder.updateMany({
+        where: { id: { in: allFolderIds }, ownerId: userId },
+        data: { deletedAt: now },
+      }),
+      this.prisma.file.updateMany({
+        where: { id: { in: descendants.fileIds }, ownerId: userId },
+        data: { deletedAt: now },
+      }),
+    ]);
+  }
+
+  private async collectDescendants(folderId: string): Promise<{
+    folderIds: string[];
+    fileIds: string[];
+  }> {
+    const folderIds: string[] = [];
+    const fileIds: string[] = [];
+    let currentLevel = [folderId];
+
+    while (currentLevel.length > 0) {
+      const [childFolders, childFiles] = await Promise.all([
+        this.prisma.folder.findMany({
+          where: { parentId: { in: currentLevel }, deletedAt: null },
+          select: { id: true },
+        }),
+        this.prisma.file.findMany({
+          where: { folderId: { in: currentLevel }, deletedAt: null },
+          select: { id: true },
+        }),
+      ]);
+
+      const newFolderIds = childFolders.map((f) => f.id);
+      folderIds.push(...newFolderIds);
+      fileIds.push(...childFiles.map((f) => f.id));
+      currentLevel = newFolderIds;
+    }
+
+    return { folderIds, fileIds };
+  }
+
   private async assertOwnership(userId: string, folderId: string): Promise<void> {
     const folder = await this.prisma.folder.findUnique({
       where: { id: folderId },
