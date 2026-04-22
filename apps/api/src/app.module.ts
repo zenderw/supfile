@@ -8,6 +8,7 @@ import { BigIntSerializerInterceptor } from './common/interceptors/bigint-serial
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { EnvConfig } from './config/env.config';
 import { validateEnv } from './config/env.validation';
+import { FilesModule } from './files/files.module';
 import { FoldersModule } from './folders/folders.module';
 import { HealthModule } from './health/health.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -25,6 +26,7 @@ import { StorageModule } from './storage/storage.module';
     HealthModule,
     AuthModule,
     FoldersModule,
+    FilesModule,
   ],
   controllers: [AppController],
   providers: [
