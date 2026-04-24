@@ -13,6 +13,7 @@ import { FoldersModule } from './folders/folders.module';
 import { HealthModule } from './health/health.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { StorageModule } from './storage/storage.module';
+import { TrashModule } from './trash/trash.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { StorageModule } from './storage/storage.module';
     AuthModule,
     FoldersModule,
     FilesModule,
+    TrashModule,
   ],
   controllers: [AppController],
   providers: [
