@@ -2,14 +2,18 @@ import 'reflect-metadata';
 
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 
 import { AppModule } from './app.module';
 import { EnvConfig } from './config/env.config';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: ['log', 'error', 'warn', 'debug', 'verbose'],
   });
+
+  app.useBodyParser('json', { limit: '5gb' });
+  app.useBodyParser('urlencoded', { extended: true, limit: '5gb' });
 
   app.setGlobalPrefix('api/v1');
 

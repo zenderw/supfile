@@ -1,4 +1,12 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Readable } from 'node:stream';
+
+import {
+  BadRequestException,
+  ConflictException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { STORAGE_SERVICE, StorageService } from '../storage/storage.interface';
@@ -6,6 +14,8 @@ import { STORAGE_SERVICE, StorageService } from '../storage/storage.interface';
 import { UpdateFileDto } from './dto/update-file.dto';
 
 const NOT_FOUND = 'NOT_FOUND';
+const QUOTA_EXCEEDED = 'QUOTA_EXCEEDED';
+const DEFAULT_USER_QUOTA = BigInt(30) * BigInt(1024 * 1024 * 1024);
 
 @Injectable()
 export class FilesService {
@@ -68,6 +78,79 @@ export class FilesService {
       where: { id: fileId },
       data: { deletedAt: new Date() },
     });
+  }
+
+  async uploadFile(
+    userId: string,
+    file: {
+      originalname: string;
+      mimetype: string;
+      size: number;
+      buffer: Buffer;
+    },
+    folderId: string | null,
+  ) {
+    if (folderId) {
+      await this.assertFolderOwnership(userId, folderId);
+    }
+
+    const user = await this.prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { usedSpace: true },
+    });
+
+    const incomingSize = BigInt(file.size);
+    if (user.usedSpace + incomingSize > DEFAULT_USER_QUOTA) {
+      throw new ConflictException({
+        code: QUOTA_EXCEEDED,
+        message: 'Quota dépassé',
+      });
+    }
+
+    const stream = Readable.from(file.buffer);
+    const { storagePath, size } = await this.storage.save(userId, stream);
+
+    if (size !== incomingSize) {
+      await this.storage.delete(storagePath);
+      throw new ConflictException({
+        code: 'SIZE_MISMATCH',
+        message: 'Taille reçue incohérente',
+      });
+    }
+
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        const created = await tx.file.create({
+          data: {
+            name: file.originalname,
+            size,
+            mimeType: file.mimetype,
+            storagePath,
+            folderId,
+            ownerId: userId,
+          },
+          select: {
+            id: true,
+            name: true,
+            size: true,
+            mimeType: true,
+            folderId: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        });
+
+        await tx.user.update({
+          where: { id: userId },
+          data: { usedSpace: { increment: size } },
+        });
+
+        return created;
+      });
+    } catch (err) {
+      await this.storage.delete(storagePath);
+      throw err;
+    }
   }
 
   private async findOwned(userId: string, fileId: string) {
