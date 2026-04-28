@@ -22,14 +22,30 @@ export default function HomeScreen() {
   }
 
   return (
-    <View className="flex-1 items-center justify-center bg-white p-6">
-      <Text className="text-3xl font-bold text-slate-900">SUPFile</Text>
-      <Text className="mt-2 text-slate-500">Bonjour {user.displayName}</Text>
-      <Text className="mt-8 text-sm text-slate-400">Application mobile - features à venir</Text>
+    <View className="flex-1 bg-white p-6">
+      <Text className="text-2xl font-bold text-slate-900 mt-8">Bonjour {user.displayName}</Text>
+
+      <View className="mt-8 gap-3">
+        <Pressable
+          onPress={() => router.push('/files')}
+          className="h-14 items-center justify-center bg-slate-900 rounded"
+        >
+          <Text className="text-white text-base font-medium">📂 Mes fichiers</Text>
+        </Pressable>
+
+        <Pressable
+          onPress={() => router.push('/trash')}
+          className="h-14 items-center justify-center bg-slate-100 rounded"
+        >
+          <Text className="text-slate-900 text-base font-medium">🗑 Corbeille</Text>
+        </Pressable>
+      </View>
+
+      <View className="flex-1" />
 
       <Pressable
         onPress={handleLogout}
-        className="mt-12 h-11 items-center justify-center rounded-md border border-red-200 px-6 active:bg-red-50"
+        className="h-11 items-center justify-center rounded-md border border-red-200 active:bg-red-50"
       >
         <Text className="text-sm font-medium text-red-600">Se déconnecter</Text>
       </Pressable>
