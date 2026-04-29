@@ -37,6 +37,10 @@ export class FilesService {
     };
   }
 
+  async findByIdInternal(userId: string, fileId: string) {
+    return this.findOwned(userId, fileId);
+  }
+
   async update(userId: string, fileId: string, dto: UpdateFileDto) {
     await this.findOwned(userId, fileId);
 
