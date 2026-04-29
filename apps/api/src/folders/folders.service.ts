@@ -13,7 +13,7 @@ import { UpdateFolderDto } from './dto/update-folder.dto';
 const NOT_FOUND = 'NOT_FOUND';
 const MAX_FOLDER_DEPTH = 20;
 
-interface BreadcrumbItem {
+export interface BreadcrumbItem {
   id: string | null;
   name: string;
 }
@@ -63,7 +63,13 @@ export class FoldersService {
     let depth = 0;
 
     while (currentId && depth < MAX_FOLDER_DEPTH) {
-      const folder = await this.prisma.folder.findUnique({
+      const folder: {
+        id: string;
+        name: string;
+        parentId: string | null;
+        ownerId: string;
+        deletedAt: Date | null;
+      } | null = await this.prisma.folder.findUnique({
         where: { id: currentId },
         select: {
           id: true,
@@ -209,7 +215,7 @@ export class FoldersService {
     let depth = 1;
 
     while (currentId && depth <= MAX_FOLDER_DEPTH) {
-      const parent = await this.prisma.folder.findUnique({
+      const parent: { parentId: string | null } | null = await this.prisma.folder.findUnique({
         where: { id: currentId },
         select: { parentId: true },
       });
@@ -237,7 +243,7 @@ export class FoldersService {
           message: 'Impossible de déplacer un dossier dans son propre descendant',
         });
       }
-      const parent = await this.prisma.folder.findUnique({
+      const parent: { parentId: string | null } | null = await this.prisma.folder.findUnique({
         where: { id: currentId },
         select: { parentId: true },
       });
