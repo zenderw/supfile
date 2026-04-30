@@ -6,6 +6,7 @@ import { MainLayout } from '@/layouts/MainLayout';
 import { FilesPage } from '@/pages/FilesPage';
 import { HomePage } from '@/pages/HomePage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
+import { PreviewPage } from '@/pages/PreviewPage';
 import { TrashPage } from '@/pages/TrashPage';
 import { LoginPage } from '@/pages/auth/LoginPage';
 import { OAuthCallbackPage } from '@/pages/auth/OAuthCallbackPage';
@@ -30,6 +31,7 @@ const routes: RouteObject[] = [
           { index: true, element: <HomePage /> },
           { path: 'files', element: <FilesPage /> },
           { path: 'files/:folderId', element: <FilesPage /> },
+          { path: 'preview/:fileId', element: <PreviewPage /> },
           { path: 'trash', element: <TrashPage /> },
         ],
       },
