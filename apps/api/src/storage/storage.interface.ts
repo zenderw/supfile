@@ -11,6 +11,7 @@ export interface StorageService {
   readRange(storagePath: string, start: number, end: number): Promise<Readable>;
   delete(storagePath: string): Promise<void>;
   exists(storagePath: string): Promise<boolean>;
+  size(storagePath: string): Promise<number>;
 }
 
 export const STORAGE_SERVICE = Symbol('STORAGE_SERVICE');

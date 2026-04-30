@@ -71,6 +71,11 @@ export class LocalStorageService implements StorageService {
     }
   }
 
+  async size(storagePath: string): Promise<number> {
+    const s = await stat(this.resolve(storagePath));
+    return s.size;
+  }
+
   private resolve(storagePath: string): string {
     if (storagePath.includes('..') || path.isAbsolute(storagePath)) {
       throw new Error(`storagePath invalide : ${storagePath}`);
