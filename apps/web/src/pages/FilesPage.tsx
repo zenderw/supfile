@@ -104,6 +104,8 @@ export function FilesPage() {
               name={f.name}
               type="file"
               sizeLabel={formatBytes(f.size)}
+              onOpen={() => navigate(`/preview/${f.id}`)}
+              onPreview={() => navigate(`/preview/${f.id}`)}
               onRename={() => setRename({ open: true, type: 'file', id: f.id, name: f.name })}
               onDelete={() => deleteFile.mutate(f.id)}
             />
