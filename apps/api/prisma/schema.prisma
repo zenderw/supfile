@@ -22,6 +22,7 @@ model User {
   oauthAccounts OAuthAccount[]
   folders       Folder[]
   files         File[]
+  shareLinks    ShareLink[]
 
   @@map("users")
 }
@@ -79,9 +80,33 @@ model File {
 
   owner  User    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   folder Folder? @relation(fields: [folderId], references: [id], onDelete: Restrict)
+  shareLinks ShareLink[]
 
   @@index([ownerId, folderId])
   @@index([ownerId, deletedAt])
   @@index([ownerId, name])
   @@map("files")
+}
+
+/// Lien de partage public d'un fichier (token aleatoire).
+/// passwordHash optionnel, expiresAt optionnel. revokedAt si revoque.
+model ShareLink {
+  id           String    @id @default(uuid()) @db.Uuid
+  token        String    @unique
+  fileId       String    @map("file_id") @db.Uuid
+  ownerId      String    @map("owner_id") @db.Uuid
+  passwordHash String?   @map("password_hash")
+  expiresAt    DateTime? @map("expires_at")
+  revokedAt    DateTime? @map("revoked_at")
+  downloads    Int       @default(0)
+
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  file  File @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId])
+  @@index([fileId])
+  @@map("share_links")
 }
