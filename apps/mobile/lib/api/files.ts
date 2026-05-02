@@ -86,6 +86,34 @@ export const filesApi = {
   },
 };
 
+export const previewApi = {
+  async getMetadata(fileId: string): Promise<FileItem> {
+    const { data } = await api.get<FileItem>(`/files/${fileId}`);
+    return data;
+  },
+  async getDownloadToken(fileId: string): Promise<string> {
+    const { data } = await api.get<{ token: string }>(`/files/${fileId}/download-token`);
+    return data.token;
+  },
+  buildDownloadUrl(fileId: string, token: string): string {
+    const base = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000/api/v1';
+    return `${base}/files/${fileId}/download?token=${token}`;
+  },
+};
+
+export type PreviewKind = 'image' | 'video' | 'audio' | 'pdf' | 'text' | 'unsupported';
+
+export function kindOf(mime: string): PreviewKind {
+  if (mime.startsWith('image/')) return 'image';
+  if (mime.startsWith('video/')) return 'video';
+  if (mime.startsWith('audio/')) return 'audio';
+  if (mime === 'application/pdf') return 'pdf';
+  if (mime.startsWith('text/') || mime === 'application/json' || mime === 'application/xml') {
+    return 'text';
+  }
+  return 'unsupported';
+}
+
 export const trashApi = {
   async list(): Promise<TrashListing> {
     const { data } = await api.get<TrashListing>('/trash');

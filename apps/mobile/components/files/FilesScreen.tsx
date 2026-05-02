@@ -231,7 +231,7 @@ export function FilesScreen({ folderId }: Props) {
                 if (item.kind === 'folder') {
                   router.push(`/files/${item.item.id}`);
                 } else {
-                  setMenu(item);
+                  router.push(`/preview/${item.item.id}`);
                 }
               }}
               onLongPress={() => setMenu(item)}
@@ -248,6 +248,14 @@ export function FilesScreen({ folderId }: Props) {
         actions={
           menu
             ? [
+                ...(menu.kind === 'file'
+                  ? [
+                      {
+                        label: 'Aperçu',
+                        onPress: () => router.push(`/preview/${menu.item.id}`),
+                      },
+                    ]
+                  : []),
                 { label: 'Renommer', onPress: () => setRenaming(menu) },
                 {
                   label: 'Supprimer',
