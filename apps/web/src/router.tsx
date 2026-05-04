@@ -7,6 +7,7 @@ import { FilesPage } from '@/pages/FilesPage';
 import { HomePage } from '@/pages/HomePage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { PreviewPage } from '@/pages/PreviewPage';
+import { PublicSharePage } from '@/pages/PublicSharePage';
 import { TrashPage } from '@/pages/TrashPage';
 import { LoginPage } from '@/pages/auth/LoginPage';
 import { OAuthCallbackPage } from '@/pages/auth/OAuthCallbackPage';
@@ -14,6 +15,7 @@ import { RegisterPage } from '@/pages/auth/RegisterPage';
 
 const routes: RouteObject[] = [
   { path: '/auth/oauth-callback', element: <OAuthCallbackPage /> },
+  { path: '/s/:token', element: <PublicSharePage /> },
   {
     element: <RequireAnon />,
     children: [
