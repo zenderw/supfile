@@ -5,6 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { CreateFolderDialog } from '@/components/files/CreateFolderDialog';
 import { FileRow, formatBytes } from '@/components/files/FileRow';
 import { RenameDialog } from '@/components/files/RenameDialog';
+import { ShareDialog } from '@/components/files/ShareDialog';
 import { UploadButton } from '@/components/files/UploadButton';
 import { Button } from '@/components/ui/button';
 import {
@@ -38,6 +39,7 @@ export function FilesPage() {
   const deleteFile = useDeleteFile(currentFolderId);
 
   const [rename, setRename] = useState<RenameState | null>(null);
+  const [share, setShare] = useState<{ id: string; name: string } | null>(null);
 
   function openFolder(id: string) {
     navigate(`/files/${id}`);
@@ -106,11 +108,21 @@ export function FilesPage() {
               sizeLabel={formatBytes(f.size)}
               onOpen={() => navigate(`/preview/${f.id}`)}
               onPreview={() => navigate(`/preview/${f.id}`)}
+              onShare={() => setShare({ id: f.id, name: f.name })}
               onRename={() => setRename({ open: true, type: 'file', id: f.id, name: f.name })}
               onDelete={() => deleteFile.mutate(f.id)}
             />
           ))}
         </div>
+      )}
+
+      {share && (
+        <ShareDialog
+          open={!!share}
+          onOpenChange={(o) => !o && setShare(null)}
+          fileId={share.id}
+          fileName={share.name}
+        />
       )}
 
       {rename && (

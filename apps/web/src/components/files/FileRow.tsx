@@ -1,4 +1,4 @@
-import { Download, Eye, FileIcon, Folder, MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import { Download, Eye, FileIcon, Folder, Link2, MoreVertical, Pencil, Trash2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -15,6 +15,7 @@ interface CommonProps {
   sizeLabel?: string;
   onOpen?: () => void;
   onPreview?: () => void;
+  onShare?: () => void;
   onRename: () => void;
   onDelete: () => void;
   onDownload?: () => void;
@@ -26,6 +27,7 @@ export function FileRow({
   sizeLabel,
   onOpen,
   onPreview,
+  onShare,
   onRename,
   onDelete,
   onDownload,
@@ -56,6 +58,12 @@ export function FileRow({
             <DropdownMenuItem onClick={onDownload}>
               <Download className="h-4 w-4 mr-2" />
               Télécharger
+            </DropdownMenuItem>
+          )}
+          {onShare && (
+            <DropdownMenuItem onClick={onShare}>
+              <Link2 className="h-4 w-4 mr-2" />
+              Partager
             </DropdownMenuItem>
           )}
           <DropdownMenuItem onClick={onRename}>
