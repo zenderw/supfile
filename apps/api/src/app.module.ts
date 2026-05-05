@@ -12,6 +12,7 @@ import { FilesModule } from './files/files.module';
 import { FoldersModule } from './folders/folders.module';
 import { HealthModule } from './health/health.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { SearchModule } from './search/search.module';
 import { ShareModule } from './share/share.module';
 import { StorageModule } from './storage/storage.module';
 import { TrashModule } from './trash/trash.module';
@@ -31,6 +32,7 @@ import { TrashModule } from './trash/trash.module';
     FilesModule,
     TrashModule,
     ShareModule,
+    SearchModule,
   ],
   controllers: [AppController],
   providers: [
