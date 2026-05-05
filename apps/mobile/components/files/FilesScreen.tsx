@@ -10,6 +10,7 @@ import {
   Pressable,
   RefreshControl,
   ScrollView,
+  Share,
   Text,
   View,
 } from 'react-native';
@@ -18,7 +19,7 @@ import { ActionsSheet } from './ActionsSheet';
 import { FileListItem } from './FileListItem';
 import { RenamePrompt } from './RenamePrompt';
 
-import { filesApi, foldersApi, FileItem, FolderItem } from '@/lib/api/files';
+import { filesApi, foldersApi, shareApi, FileItem, FolderItem } from '@/lib/api/files';
 
 interface Props {
   folderId: string | null;
@@ -81,6 +82,16 @@ export function FilesScreen({ folderId }: Props) {
     mutationFn: (id: string) => filesApi.remove(id),
     onSuccess: invalidate,
   });
+
+  async function shareFile(fileId: string) {
+    try {
+      const link = await shareApi.create(fileId, {});
+      const url = shareApi.buildShareUrl(link.token);
+      await Share.share({ message: url, url });
+    } catch (e) {
+      Alert.alert('Erreur', e instanceof Error ? e.message : 'Echec partage');
+    }
+  }
 
   const upload = useMutation({
     mutationFn: ({ uri, name, mimeType }: { uri: string; name: string; mimeType: string }) =>
@@ -253,6 +264,10 @@ export function FilesScreen({ folderId }: Props) {
                       {
                         label: 'Aperçu',
                         onPress: () => router.push(`/preview/${menu.item.id}`),
+                      },
+                      {
+                        label: 'Partager',
+                        onPress: () => shareFile(menu.item.id),
                       },
                     ]
                   : []),

@@ -86,6 +86,29 @@ export const filesApi = {
   },
 };
 
+export interface ShareLinkDto {
+  id: string;
+  token: string;
+  fileId: string;
+  fileName?: string;
+  hasPassword: boolean;
+  expiresAt: string | null;
+}
+
+export const shareApi = {
+  async create(
+    fileId: string,
+    input: { password?: string; expiresInHours?: number },
+  ): Promise<ShareLinkDto> {
+    const { data } = await api.post<ShareLinkDto>(`/share/files/${fileId}`, input);
+    return data;
+  },
+  buildShareUrl(token: string): string {
+    const webBase = process.env.EXPO_PUBLIC_WEB_URL ?? 'http://localhost:5173';
+    return `${webBase}/s/${token}`;
+  },
+};
+
 export const previewApi = {
   async getMetadata(fileId: string): Promise<FileItem> {
     const { data } = await api.get<FileItem>(`/files/${fileId}`);
