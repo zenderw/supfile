@@ -14,6 +14,7 @@ import { HealthModule } from './health/health.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { SearchModule } from './search/search.module';
 import { ShareModule } from './share/share.module';
+import { StatsModule } from './stats/stats.module';
 import { StorageModule } from './storage/storage.module';
 import { TrashModule } from './trash/trash.module';
 
@@ -33,6 +34,7 @@ import { TrashModule } from './trash/trash.module';
     TrashModule,
     ShareModule,
     SearchModule,
+    StatsModule,
   ],
   controllers: [AppController],
   providers: [
