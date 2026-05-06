@@ -8,6 +8,7 @@ import { HomePage } from '@/pages/HomePage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { PreviewPage } from '@/pages/PreviewPage';
 import { PublicSharePage } from '@/pages/PublicSharePage';
+import { SearchPage } from '@/pages/SearchPage';
 import { TrashPage } from '@/pages/TrashPage';
 import { LoginPage } from '@/pages/auth/LoginPage';
 import { OAuthCallbackPage } from '@/pages/auth/OAuthCallbackPage';
@@ -34,6 +35,7 @@ const routes: RouteObject[] = [
           { path: 'files', element: <FilesPage /> },
           { path: 'files/:folderId', element: <FilesPage /> },
           { path: 'preview/:fileId', element: <PreviewPage /> },
+          { path: 'search', element: <SearchPage /> },
           { path: 'trash', element: <TrashPage /> },
         ],
       },
