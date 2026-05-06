@@ -34,6 +34,13 @@ export default function HomeScreen() {
         </Pressable>
 
         <Pressable
+          onPress={() => router.push('/search')}
+          className="h-14 items-center justify-center bg-slate-100 rounded"
+        >
+          <Text className="text-slate-900 text-base font-medium">🔍 Rechercher</Text>
+        </Pressable>
+
+        <Pressable
           onPress={() => router.push('/trash')}
           className="h-14 items-center justify-center bg-slate-100 rounded"
         >

@@ -26,6 +26,7 @@ export default function RootLayout() {
         <Stack.Screen name="register" options={{ title: 'Inscription' }} />
         <Stack.Screen name="files" options={{ headerShown: false }} />
         <Stack.Screen name="preview" options={{ headerShown: false }} />
+        <Stack.Screen name="search" options={{ title: 'Recherche' }} />
         <Stack.Screen name="trash" options={{ title: 'Corbeille' }} />
       </Stack>
     </QueryClientProvider>

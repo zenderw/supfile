@@ -137,6 +137,28 @@ export function kindOf(mime: string): PreviewKind {
   return 'unsupported';
 }
 
+export interface SearchResultDto {
+  folders: Array<{ id: string; name: string; parentId: string | null; updatedAt: string }>;
+  files: Array<{
+    id: string;
+    name: string;
+    mimeType: string;
+    size: string;
+    folderId: string | null;
+    updatedAt: string;
+  }>;
+  query: string;
+}
+
+export const searchApi = {
+  async run(q: string, type: 'all' | 'folder' | 'file' = 'all'): Promise<SearchResultDto> {
+    const { data } = await api.get<SearchResultDto>('/search', {
+      params: { q, type },
+    });
+    return data;
+  },
+};
+
 export const trashApi = {
   async list(): Promise<TrashListing> {
     const { data } = await api.get<TrashListing>('/trash');
