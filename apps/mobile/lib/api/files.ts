@@ -159,6 +159,36 @@ export const searchApi = {
   },
 };
 
+export interface DashboardStatsDto {
+  usedSpace: string;
+  quota: string;
+  totalFolders: number;
+  totalFiles: number;
+  recentFiles: Array<{
+    id: string;
+    name: string;
+    size: string;
+    mimeType: string;
+    folderId: string | null;
+    updatedAt: string;
+  }>;
+  byCategory: {
+    image: number;
+    video: number;
+    audio: number;
+    pdf: number;
+    document: number;
+    other: number;
+  };
+}
+
+export const statsApi = {
+  async me(): Promise<DashboardStatsDto> {
+    const { data } = await api.get<DashboardStatsDto>('/stats');
+    return data;
+  },
+};
+
 export const trashApi = {
   async list(): Promise<TrashListing> {
     const { data } = await api.get<TrashListing>('/trash');
