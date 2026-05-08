@@ -3,6 +3,7 @@ import 'reflect-metadata';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
+import helmet from 'helmet';
 
 import { AppModule } from './app.module';
 import { EnvConfig } from './config/env.config';
@@ -10,6 +11,18 @@ import { EnvConfig } from './config/env.config';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: ['log', 'error', 'warn', 'debug', 'verbose'],
+  });
+
+  app.use(
+    helmet({
+      contentSecurityPolicy: false,
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+    }),
+  );
+
+  app.enableCors({
+    origin: true,
+    credentials: true,
   });
 
   app.useBodyParser('json', { limit: '5gb' });
