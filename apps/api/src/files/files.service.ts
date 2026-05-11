@@ -122,11 +122,13 @@ export class FilesService {
       });
     }
 
+    const cleanName = sanitizeFileName(file.originalname);
+
     try {
       return await this.prisma.$transaction(async (tx) => {
         const created = await tx.file.create({
           data: {
-            name: file.originalname,
+            name: cleanName,
             size,
             mimeType: file.mimetype,
             storagePath,
@@ -179,4 +181,13 @@ export class FilesService {
       throw new NotFoundException({ code: NOT_FOUND });
     }
   }
+}
+
+function sanitizeFileName(raw: string): string {
+  const cleaned = raw
+    // eslint-disable-next-line no-control-regex
+    .replace(/[\x00-\x1f\x7f/\\]/g, '_')
+    .trim()
+    .slice(0, 255);
+  return cleaned || 'fichier';
 }
