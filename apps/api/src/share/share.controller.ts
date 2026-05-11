@@ -16,6 +16,7 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import type { JwtPayload } from '@supfile/shared';
 import type { Response } from 'express';
 
@@ -78,6 +79,7 @@ export class PublicShareController {
 
   @Post(':token/verify')
   @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { ttl: 60_000, limit: 10 } })
   verify(@Param('token') token: string, @Body() dto: VerifyShareDto) {
     return this.share.verifyPassword(token, dto.password);
   }

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
 import { AppController } from './app.controller';
 import { AuthModule } from './auth/auth.module';
@@ -25,6 +26,12 @@ import { TrashModule } from './trash/trash.module';
       validate: validateEnv,
       envFilePath: ['.env'],
     }),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60_000,
+        limit: 100,
+      },
+    ]),
     PrismaModule,
     StorageModule,
     HealthModule,
@@ -39,6 +46,10 @@ import { TrashModule } from './trash/trash.module';
   controllers: [AppController],
   providers: [
     EnvConfig,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
     {
       provide: APP_INTERCEPTOR,
       useClass: LoggingInterceptor,
