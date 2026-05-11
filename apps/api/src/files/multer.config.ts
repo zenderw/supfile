@@ -5,7 +5,28 @@ import type { MulterOptions } from '@nestjs/platform-express/multer/interfaces/m
 import { memoryStorage } from 'multer';
 
 const MAX_UPLOAD_SIZE = 5 * 1024 * 1024 * 1024;
-const BLOCKED_EXTENSIONS = ['.exe', '.bat', '.cmd', '.sh', '.ps1', '.msi', '.scr'];
+const BLOCKED_EXTENSIONS = [
+  '.exe',
+  '.bat',
+  '.cmd',
+  '.sh',
+  '.ps1',
+  '.msi',
+  '.scr',
+  '.vbs',
+  '.vbe',
+  '.js',
+  '.jse',
+  '.wsf',
+  '.wsh',
+  '.com',
+  '.pif',
+  '.jar',
+  '.app',
+  '.deb',
+  '.rpm',
+  '.dmg',
+];
 
 export const multerConfig: MulterOptions = {
   storage: memoryStorage(),
