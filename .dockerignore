@@ -1,0 +1,16 @@
+**/node_modules
+**/dist
+**/.turbo
+**/build
+**/.next
+**/.expo
+**/coverage
+**/.cache
+.git
+.github
+.husky
+.vscode
+.idea
+**/*.log
+apps/mobile
+apps/web/dist
