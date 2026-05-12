@@ -24,17 +24,43 @@ supfile/
 └── tsconfig.base.json
 ```
 
-## Démarrage rapide
+## Démarrage rapide (dev)
 
 ```bash
 # Installation des dépendances
 pnpm install
 
-# Lancement (à venir dans les prochaines PRs)
-pnpm api dev
-pnpm web dev
-pnpm mobile start
+# Lancement
+pnpm --filter @supfile/api dev
+pnpm --filter @supfile/web dev
+pnpm --filter @supfile/mobile start
 ```
+
+## Démarrage en production (Docker)
+
+```bash
+# 1. créer le fichier .env à la racine et remplir les secrets requis
+cp .env.example .env
+# editer .env pour mettre des vraies valeurs (POSTGRES_PASSWORD, JWT_SECRET, JWT_REFRESH_SECRET)
+
+# 2. build + lancement
+docker compose up -d --build
+
+# 3. acceder à l'app
+# - web : http://localhost
+# - api : http://localhost:3000/api/v1
+```
+
+Les containers :
+
+- `supfile-postgres` : base PostgreSQL (port 5432)
+- `supfile-api` : API NestJS (port 3000), avec migrations appliquées au démarrage
+- `supfile-web` : front Vite servi par nginx (port 80)
+
+Les volumes :
+
+- `supfile_pg_data` : données Postgres
+- `supfile_storage` : fichiers uploadés
 
 ## Prérequis
 
