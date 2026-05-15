@@ -184,7 +184,12 @@ export class FilesService {
 }
 
 function sanitizeFileName(raw: string): string {
-  const cleaned = raw
+  let name = raw;
+  try {
+    name = Buffer.from(raw, 'latin1').toString('utf8');
+  } catch {
+  }
+  const cleaned = name
     // eslint-disable-next-line no-control-regex
     .replace(/[\x00-\x1f\x7f/\\]/g, '_')
     .trim()
