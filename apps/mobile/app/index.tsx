@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { router } from 'expo-router';
-import { useEffect } from 'react';
+import { Redirect, router } from 'expo-router';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { formatBytes, statsApi } from '@/lib/api/files';
@@ -17,19 +16,13 @@ export default function HomeScreen() {
   const user = useAuthStore((s) => s.user);
   const clear = useAuthStore((s) => s.clear);
 
-  useEffect(() => {
-    if (!user) {
-      router.replace('/login');
-    }
-  }, [user]);
-
   const stats = useQuery({
     queryKey: ['mobile-stats'],
     queryFn: () => statsApi.me(),
     enabled: !!user,
   });
 
-  if (!user) return null;
+  if (!user) return <Redirect href="/login" />;
 
   function handleLogout() {
     clear();
