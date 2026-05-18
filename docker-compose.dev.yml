@@ -1,31 +1,32 @@
 services:
   postgres:
-    image: postgres:16-alpine
-    container_name: supfile-postgres-dev
-    restart: unless-stopped
+    image: ${POSTGRES_IMAGE:-postgres:16-alpine}
+    container_name: ${POSTGRES_DEV_CONTAINER_NAME:-supfile-postgres-dev}
+    restart: ${RESTART_POLICY:-unless-stopped}
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-supfile}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-supfile}
-      POSTGRES_DB: ${POSTGRES_DB:-supfile}
+      POSTGRES_USER: ${POSTGRES_USER:?required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?required}
+      POSTGRES_DB: ${POSTGRES_DB:?required}
     ports:
-      - "5432:5432"
+      - '${POSTGRES_HOST_PORT:-5432}:${POSTGRES_CONTAINER_PORT:-5432}'
     volumes:
-      - supfile_pg_data:/var/lib/postgresql/data
+      - pg_data:${POSTGRES_DATA_DIR:-/var/lib/postgresql/data}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-supfile}"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER}']
+      interval: ${HEALTHCHECK_INTERVAL:-5s}
+      timeout: ${HEALTHCHECK_TIMEOUT:-5s}
+      retries: ${HEALTHCHECK_RETRIES:-5}
+
   adminer:
-    image: adminer:4-standalone
-    container_name: supfile-adminer-dev
-    restart: unless-stopped
+    image: ${ADMINER_IMAGE:-adminer:4-standalone}
+    container_name: ${ADMINER_CONTAINER_NAME:-supfile-adminer-dev}
+    restart: ${RESTART_POLICY:-unless-stopped}
     ports:
-      - "8080:8080"
+      - '${ADMINER_HOST_PORT:-8080}:${ADMINER_CONTAINER_PORT:-8080}'
     depends_on:
       postgres:
         condition: service_healthy
 
 volumes:
-  supfile_pg_data:
-    name: supfile_pg_data
+  pg_data:
+    name: ${POSTGRES_VOLUME_NAME:-supfile_pg_data}

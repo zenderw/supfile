@@ -1,92 +1,117 @@
 # SUPFile
 
-Plateforme de stockage cloud (type Drive / Dropbox) — projet 4PROJ.
+Plateforme de stockage cloud type Drive/Dropbox - projet 4PROJ SUPINFO.
 
-## Stack
+App web + mobile + API, le tout dockerisable pour le déploiement.
 
-- **API** : NestJS + Prisma + PostgreSQL
-- **Web** : Vite + React + shadcn/ui
-- **Mobile** : Expo + React Native + NativeWind
-- **Monorepo** : pnpm workspaces
+## Stack technique
 
-## Arborescence
+- API : NestJS + Prisma + Postgres
+- Web : React + Vite + shadcn/ui + Tailwind
+- Mobile : Expo (React Native) + NativeWind
+- Monorepo : pnpm workspaces
+
+## Prerequis
+
+- Node 20 ou plus
+- pnpm 9+
+- Docker Desktop
+
+## Structure du repo
 
 ```
 supfile/
 ├── apps/
-│   ├── api/         # serveur NestJS
-│   ├── web/         # client web React
-│   └── mobile/      # client mobile Expo
+│   ├── api/         # backend NestJS
+│   ├── web/         # front web
+│   └── mobile/      # appli mobile Expo
 ├── packages/
-│   └── shared/      # types et constantes partagés
-├── package.json
-├── pnpm-workspace.yaml
-└── tsconfig.base.json
+│   └── shared/      # types partagés entre les 3 apps
+├── docker-compose.yml       # docker prod (postgres + api + web)
+├── docker-compose.dev.yml   # juste postgres pour dev en local
+└── ...
 ```
 
-## Démarrage rapide (dev)
+## Lancer en dev
+
+D'abord installer les deps :
 
 ```bash
-# Installation des dépendances
 pnpm install
+```
 
-# Lancement
+Lancer la BDD avec docker (en local on lance que postgres, le reste tourne via pnpm) :
+
+```bash
+cp .env.example .env
+docker compose -f docker-compose.dev.yml up -d
+```
+
+Adminer est aussi lancé sur http://localhost:8080 si tu veux inspecter la BDD (système : PostgreSQL, serveur : `postgres`).
+
+Ensuite faut lancer les 3 apps dans des terminaux séparés :
+
+```bash
 pnpm --filter @supfile/api dev
 pnpm --filter @supfile/web dev
 pnpm --filter @supfile/mobile start
 ```
 
-## Démarrage en production (Docker)
+L'API tourne sur le port 3000, le web sur 5173, et le mobile affiche un QR code pour Expo Go.
+
+## Lancer en prod via Docker
+
+Il faut un fichier `.env` à la racine avec au minimum :
+
+```
+POSTGRES_PASSWORD=...
+JWT_SECRET=...           # une vraie chaine aleatoire, genre 64 chars
+JWT_REFRESH_SECRET=...   # autre chaine, differente du JWT_SECRET
+```
+
+Le `.env.example` est là pour servir de modèle.
+
+Ensuite :
 
 ```bash
-# 1. créer le fichier .env à la racine et remplir les secrets requis
-cp .env.example .env
-# editer .env pour mettre des vraies valeurs (POSTGRES_PASSWORD, JWT_SECRET, JWT_REFRESH_SECRET)
-
-# 2. build + lancement
 docker compose up -d --build
-
-# 3. acceder à l'app
-# - web : http://localhost
-# - api : http://localhost:3000/api/v1
 ```
+
+Le premier build prend quelques minutes (build de l'image API + build du front avec Vite). Une fois fini :
+
+- web : http://localhost
+- api : http://localhost:3000/api/v1
+- bdd : interne au réseau Docker, pas exposée
 
 Les containers :
 
-- `supfile-postgres` : base PostgreSQL (port 5432)
-- `supfile-api` : API NestJS (port 3000), avec migrations appliquées au démarrage
-- `supfile-web` : front Vite servi par nginx (port 80)
+- `supfile-postgres` : PostgreSQL 16
+- `supfile-api` : API NestJS, applique les migrations au démarrage
+- `supfile-web` : Front buildé, servi par nginx avec un rewrite SPA
 
-Les volumes :
+Et les volumes Docker pour la persistance :
 
-- `supfile_pg_data` : données Postgres
-- `supfile_storage` : fichiers uploadés
+- `supfile_pg_data` : données de la BDD
+- `supfile_storage` : fichiers uploadés par les users
 
-## Prérequis
-
-- Node.js 20+
-- pnpm 9+
-- Docker Desktop (pour la base de données)
-
-## Démarrage de la base de données (dev)
+## Stopper
 
 ```bash
-cp .env.example .env
-docker compose -f docker-compose.dev.yml up -d
-docker compose -f docker-compose.dev.yml ps
+docker compose down
 ```
 
-- **Postgres** : `localhost:5432` (user/pass selon `.env`)
-- **Adminer** : `http://localhost:8080` (système : PostgreSQL, serveur : `postgres`)
-
-Pour stopper :
+Si tu veux tout reset (efface aussi les volumes, donc les données) :
 
 ```bash
-docker compose -f docker-compose.dev.yml down
+docker compose down -v
 ```
 
-Pour réinitialiser totalement (efface les données) :
+## Doc utilisateur
 
-```bash
-docker compose -f docker-compose.dev.yml down -v
-```
+Voir [docs/MANUEL-UTILISATEUR.md](docs/MANUEL-UTILISATEUR.md) pour le manuel coté utilisateur final (comment creer un compte, uploader, partager...).
+
+## Equipe
+
+- Wayl Zender
+- Arthur Bertolotti
+- Maloé Laversin
