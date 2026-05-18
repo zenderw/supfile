@@ -14,6 +14,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ActionsSheet } from './ActionsSheet';
 import { FileListItem } from './FileListItem';
@@ -29,6 +30,7 @@ type MenuTarget = { kind: 'folder'; item: FolderItem } | { kind: 'file'; item: F
 
 export function FilesScreen({ folderId }: Props) {
   const qc = useQueryClient();
+  const insets = useSafeAreaInsets();
   const [menu, setMenu] = useState<MenuTarget>(null);
   const [renaming, setRenaming] = useState<MenuTarget>(null);
   const [createOpen, setCreateOpen] = useState(false);
@@ -160,7 +162,20 @@ export function FilesScreen({ folderId }: Props) {
     : [{ id: null, name: 'Mes fichiers' }];
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
+      {/* bouton retour vers l'accueil */}
+      <View className="flex-row items-center px-2 py-2 border-b border-slate-100">
+        <Pressable
+          onPress={() => {
+            if (router.canGoBack()) router.back();
+            else router.replace('/');
+          }}
+          className="px-3 py-2"
+        >
+          <Text className="text-base text-slate-700">‹ Accueil</Text>
+        </Pressable>
+      </View>
+
       {/* breadcrumbs */}
       <ScrollView
         horizontal

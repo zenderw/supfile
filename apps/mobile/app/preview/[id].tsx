@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { router, useLocalSearchParams } from 'expo-router';
+import { Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -11,7 +11,6 @@ import {
   Text,
   View,
 } from 'react-native';
-
 import { kindOf, previewApi } from '@/lib/api/files';
 
 export default function PreviewScreen() {
@@ -72,20 +71,18 @@ export default function PreviewScreen() {
 
   return (
     <View className="flex-1 bg-white">
-      {/* header maison */}
-      <View className="flex-row items-center px-3 py-2 border-b border-slate-100">
-        <Pressable onPress={() => router.back()} className="px-3 py-2">
-          <Text className="text-slate-700">‹ Retour</Text>
-        </Pressable>
-        <Text className="flex-1 text-base font-semibold text-slate-900" numberOfLines={1}>
-          {meta.data.name}
-        </Text>
-        {url && (
-          <Pressable onPress={openExternal} className="px-3 py-2">
-            <Text className="text-slate-700">⤓</Text>
-          </Pressable>
-        )}
-      </View>
+      {/* on overrride le titre Stack avec le nom du fichier et on rajoute un bouton DL */}
+      <Stack.Screen
+        options={{
+          title: meta.data.name,
+          headerRight: () =>
+            url ? (
+              <Pressable onPress={openExternal} className="px-2 py-1">
+                <Text className="text-base">⤓</Text>
+              </Pressable>
+            ) : null,
+        }}
+      />
 
       <View className="flex-1 items-center justify-center p-4">
         {url && kind === 'image' && (
@@ -104,10 +101,12 @@ export default function PreviewScreen() {
           </ScrollView>
         )}
 
-        {(kind === 'video' || kind === 'audio' || kind === 'pdf') && (
+        {(kind === 'pdf' || kind === 'video' || kind === 'audio') && (
           <View className="items-center gap-3">
             <Text className="text-slate-500 text-center">
-              Aperçu non intégré pour ce format sur mobile.
+              {kind === 'pdf'
+                ? 'Le PDF s\'ouvre dans le navigateur natif pour un meilleur rendu.'
+                : 'Aperçu non intégré pour ce format sur mobile.'}
             </Text>
             <Pressable onPress={openExternal} className="bg-slate-900 rounded px-5 py-3">
               <Text className="text-white font-medium">Ouvrir dans le navigateur</Text>
