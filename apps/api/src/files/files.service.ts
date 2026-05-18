@@ -8,6 +8,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
+import { PlansService } from '../plans/plans.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { STORAGE_SERVICE, StorageService } from '../storage/storage.interface';
 
@@ -15,13 +16,14 @@ import { UpdateFileDto } from './dto/update-file.dto';
 
 const NOT_FOUND = 'NOT_FOUND';
 const QUOTA_EXCEEDED = 'QUOTA_EXCEEDED';
-const DEFAULT_USER_QUOTA = BigInt(30) * BigInt(1024 * 1024 * 1024);
+const FILE_TOO_LARGE = 'FILE_TOO_LARGE';
 
 @Injectable()
 export class FilesService {
   constructor(
     private readonly prisma: PrismaService,
     @Inject(STORAGE_SERVICE) private readonly storage: StorageService,
+    private readonly plans: PlansService,
   ) {}
 
   async getMetadata(userId: string, fileId: string) {
@@ -100,14 +102,24 @@ export class FilesService {
 
     const user = await this.prisma.user.findUniqueOrThrow({
       where: { id: userId },
-      select: { usedSpace: true },
+      select: { usedSpace: true, plan: true },
     });
 
     const incomingSize = BigInt(file.size);
-    if (user.usedSpace + incomingSize > DEFAULT_USER_QUOTA) {
+
+    const maxFileSize = await this.plans.getMaxFileSizeFor(userId);
+    if (incomingSize > maxFileSize) {
+      throw new BadRequestException({
+        code: FILE_TOO_LARGE,
+        message: `Fichier trop volumineux pour votre plan ${user.plan}. Maximum: ${maxFileSize} octets.`,
+      });
+    }
+
+    const userQuota = await this.plans.getQuotaFor(userId);
+    if (user.usedSpace + incomingSize > userQuota) {
       throw new ConflictException({
         code: QUOTA_EXCEEDED,
-        message: 'Quota dépassé',
+        message: 'Quota dépassé pour votre plan',
       });
     }
 
