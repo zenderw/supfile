@@ -1,18 +1,20 @@
 import { Injectable } from '@nestjs/common';
 
+import { PlansService } from '../plans/plans.service';
 import { PrismaService } from '../prisma/prisma.service';
-
-const DEFAULT_QUOTA = BigInt(30) * BigInt(1024 * 1024 * 1024);
 
 @Injectable()
 export class StatsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly plans: PlansService,
+  ) {}
 
   async forUser(userId: string) {
-    const [user, totalFolders, totalFiles, recent, byMime] = await Promise.all([
+    const [user, totalFolders, totalFiles, recent, byMime, quota] = await Promise.all([
       this.prisma.user.findUnique({
         where: { id: userId },
-        select: { usedSpace: true },
+        select: { usedSpace: true, plan: true },
       }),
       this.prisma.folder.count({ where: { ownerId: userId, deletedAt: null } }),
       this.prisma.file.count({ where: { ownerId: userId, deletedAt: null } }),
@@ -30,11 +32,13 @@ export class StatsService {
         take: 10,
       }),
       this.aggregateByCategory(userId),
+      this.plans.getQuotaFor(userId),
     ]);
 
     return {
       usedSpace: (user?.usedSpace ?? BigInt(0)).toString(),
-      quota: DEFAULT_QUOTA.toString(),
+      quota: quota.toString(),
+      plan: user?.plan ?? 'FREE',
       totalFolders,
       totalFiles,
       recentFiles: recent,

@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 
+import { PlansService } from '../plans/plans.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 import { CreateShareDto } from './dto/create-share.dto';
@@ -19,13 +20,24 @@ function generateToken() {
 
 @Injectable()
 export class ShareService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly plans: PlansService,
+  ) {}
 
   async create(userId: string, fileId: string, dto: CreateShareDto) {
     const file = await this.prisma.file.findFirst({
       where: { id: fileId, ownerId: userId, deletedAt: null },
     });
     if (!file) throw new NotFoundException('Fichier introuvable');
+
+    await this.plans.assertActiveLinksUnderLimit(userId);
+    if (dto.password) {
+      await this.plans.assertCanCreatePasswordShare(userId);
+    }
+    if (dto.expiresInHours) {
+      await this.plans.assertCanCreateCustomExpiry(userId);
+    }
 
     const passwordHash = dto.password ? await bcrypt.hash(dto.password, 10) : null;
     const expiresAt = dto.expiresInHours
