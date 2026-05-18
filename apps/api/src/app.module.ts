@@ -12,6 +12,7 @@ import { validateEnv } from './config/env.validation';
 import { FilesModule } from './files/files.module';
 import { FoldersModule } from './folders/folders.module';
 import { HealthModule } from './health/health.module';
+import { PlansModule } from './plans/plans.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { SearchModule } from './search/search.module';
 import { ShareModule } from './share/share.module';
@@ -42,6 +43,7 @@ import { TrashModule } from './trash/trash.module';
     ShareModule,
     SearchModule,
     StatsModule,
+    PlansModule,
   ],
   controllers: [AppController],
   providers: [
