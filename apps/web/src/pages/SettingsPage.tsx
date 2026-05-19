@@ -46,7 +46,14 @@ export function SettingsPage() {
 
       {stats && (
         <section className="border rounded-lg p-6 space-y-3">
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase">Stockage</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase">Stockage</h2>
+            {stats.plan && (
+              <span className="text-xs px-2 py-1 rounded bg-primary/10 text-primary font-medium">
+                Plan {stats.plan}
+              </span>
+            )}
+          </div>
           <div className="flex items-baseline justify-between text-sm">
             <span>Espace utilisé</span>
             <span>

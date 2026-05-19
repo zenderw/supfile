@@ -7,6 +7,7 @@ import { FilesPage } from '@/pages/FilesPage';
 import { HomePage } from '@/pages/HomePage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { PreviewPage } from '@/pages/PreviewPage';
+import { PricingPage } from '@/pages/PricingPage';
 import { PublicSharePage } from '@/pages/PublicSharePage';
 import { SearchPage } from '@/pages/SearchPage';
 import { SettingsPage } from '@/pages/SettingsPage';
@@ -39,6 +40,7 @@ const routes: RouteObject[] = [
           { path: 'preview/:fileId', element: <PreviewPage /> },
           { path: 'search', element: <SearchPage /> },
           { path: 'shared', element: <SharedPage /> },
+          { path: 'pricing', element: <PricingPage /> },
           { path: 'settings', element: <SettingsPage /> },
           { path: 'trash', element: <TrashPage /> },
         ],

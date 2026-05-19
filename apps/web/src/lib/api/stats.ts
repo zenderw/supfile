@@ -12,6 +12,7 @@ export interface CategoryCounts {
 export interface DashboardStats {
   usedSpace: string;
   quota: string;
+  plan?: 'FREE' | 'PRO' | 'BUSINESS';
   totalFolders: number;
   totalFiles: number;
   recentFiles: Array<{

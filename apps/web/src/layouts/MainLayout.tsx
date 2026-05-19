@@ -1,4 +1,12 @@
-import { FolderIcon, HomeIcon, SearchIcon, SettingsIcon, ShareIcon, Trash2 } from 'lucide-react';
+import {
+  FolderIcon,
+  HomeIcon,
+  SearchIcon,
+  SettingsIcon,
+  ShareIcon,
+  Sparkles,
+  Trash2,
+} from 'lucide-react';
 import { NavLink, Outlet } from 'react-router-dom';
 
 import { UserMenu } from '@/components/UserMenu';
@@ -10,6 +18,7 @@ const navItems = [
   { to: '/shared', label: 'Partagés', icon: ShareIcon },
   { to: '/search', label: 'Recherche', icon: SearchIcon },
   { to: '/trash', label: 'Corbeille', icon: Trash2 },
+  { to: '/pricing', label: 'Abonnement', icon: Sparkles },
   { to: '/settings', label: 'Paramètres', icon: SettingsIcon },
 ];
 
