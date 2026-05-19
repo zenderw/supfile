@@ -1,3 +1,5 @@
+import * as path from 'node:path';
+
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
@@ -25,7 +27,11 @@ import { TrashModule } from './trash/trash.module';
     ConfigModule.forRoot({
       isGlobal: true,
       validate: validateEnv,
-      envFilePath: ['.env'],
+      envFilePath: [
+        path.resolve(process.cwd(), '.env'),
+        path.resolve(__dirname, '../../../../.env'),
+        path.resolve(__dirname, '../../../.env'),
+      ],
     }),
     ThrottlerModule.forRoot([
       {

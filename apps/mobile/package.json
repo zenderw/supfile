@@ -4,10 +4,12 @@
   "private": true,
   "main": "expo-router/entry",
   "scripts": {
-    "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web",
+    "presync-env": "node -e \"require('fs').copyFileSync('../../.env', '.env')\"",
+    "sync-env": "pnpm presync-env",
+    "start": "pnpm sync-env && expo start",
+    "android": "pnpm sync-env && expo start --android",
+    "ios": "pnpm sync-env && expo start --ios",
+    "web": "pnpm sync-env && expo start --web",
     "lint": "eslint app --ext .ts,.tsx"
   },
   "dependencies": {
