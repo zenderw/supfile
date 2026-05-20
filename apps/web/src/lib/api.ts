@@ -29,6 +29,13 @@ function flushQueue(token: string | null) {
   queue = [];
 }
 
+function unwrapMessage(error: AxiosError) {
+  const data = error.response?.data as { message?: string | string[] } | undefined;
+  if (data?.message) {
+    error.message = Array.isArray(data.message) ? data.message.join(', ') : data.message;
+  }
+}
+
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
@@ -37,6 +44,7 @@ api.interceptors.response.use(
     const isAuthEndpoint = original?.url?.includes('/auth/');
 
     if (error.response?.status !== 401 || !original || original._retry || isAuthEndpoint) {
+      unwrapMessage(error);
       return Promise.reject(error);
     }
 
@@ -77,6 +85,7 @@ api.interceptors.response.use(
     } catch (refreshErr) {
       flushQueue(null);
       clear();
+      if (refreshErr instanceof AxiosError) unwrapMessage(refreshErr);
       return Promise.reject(refreshErr);
     } finally {
       isRefreshing = false;
