@@ -6,8 +6,14 @@ Application web + mobile + API, le tout dockerisable pour le déploiement.
 
 ## Documentation
 
-- **[docs/DOCUMENTATION-TECHNIQUE.md](docs/DOCUMENTATION-TECHNIQUE.md)** — architecture, choix techniques, modèle de données, endpoints API, sécurité.
-- **[docs/MANUEL-UTILISATEUR.md](docs/MANUEL-UTILISATEUR.md)** — guide pas à pas pour l'utilisateur final.
+Le dossier [`docs/`](docs/) contient toute la documentation, organisée en fichiers thématiques :
+
+- [01-INSTALLATION.md](docs/01-INSTALLATION.md) — prérequis et démarrage
+- [02-DEPLOIEMENT.md](docs/02-DEPLOIEMENT.md) — variables d'env, conteneurs, sauvegarde
+- [03-ARCHITECTURE.md](docs/03-ARCHITECTURE.md) — choix techno, modèle de données, UML
+- [04-API.md](docs/04-API.md) — endpoints REST
+- [05-SECURITE.md](docs/05-SECURITE.md) — auth, scoping, secrets
+- [MANUEL-UTILISATEUR.md](docs/MANUEL-UTILISATEUR.md) — guide utilisateur final
 
 ## Stack technique
 
@@ -33,7 +39,11 @@ supfile/
 ├── packages/
 │   └── shared/      types TypeScript partagés
 ├── docs/
-│   ├── DOCUMENTATION-TECHNIQUE.md
+│   ├── 01-INSTALLATION.md
+│   ├── 02-DEPLOIEMENT.md
+│   ├── 03-ARCHITECTURE.md
+│   ├── 04-API.md
+│   ├── 05-SECURITE.md
 │   └── MANUEL-UTILISATEUR.md
 ├── docker-compose.yml       production (postgres + api + web)
 ├── docker-compose.dev.yml   dev (postgres + adminer)
