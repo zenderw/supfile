@@ -16,6 +16,7 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import type { JwtPayload } from '@supfile/shared';
 import type { Response } from 'express';
@@ -28,6 +29,8 @@ import { CreateShareDto } from './dto/create-share.dto';
 import { VerifyShareDto } from './dto/verify-share.dto';
 import { ShareService } from './share.service';
 
+@ApiTags('share')
+@ApiBearerAuth()
 @Controller('share')
 export class ShareController {
   constructor(
@@ -62,6 +65,7 @@ export class ShareController {
   }
 }
 
+@ApiTags('share')
 @Controller('s')
 export class PublicShareController {
   constructor(

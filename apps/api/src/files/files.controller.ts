@@ -20,6 +20,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import type { JwtPayload } from '@supfile/shared';
 import type { Response } from 'express';
 
@@ -34,6 +35,8 @@ import { FilesService } from './files.service';
 import { multerConfig } from './multer.config';
 import { ZipService } from './zip.service';
 
+@ApiTags('files')
+@ApiBearerAuth()
 @Controller('files')
 export class FilesController {
   constructor(

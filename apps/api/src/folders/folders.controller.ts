@@ -12,6 +12,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import type { JwtPayload } from '@supfile/shared';
 
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -22,6 +23,8 @@ import { ListFolderQuery } from './dto/list-folder.query';
 import { UpdateFolderDto } from './dto/update-folder.dto';
 import { FoldersService } from './folders.service';
 
+@ApiTags('folders')
+@ApiBearerAuth()
 @Controller('folders')
 @UseGuards(JwtAuthGuard)
 export class FoldersController {
