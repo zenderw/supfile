@@ -52,12 +52,12 @@ export class PlansService {
     });
     if (!user) throw new NotFoundException('User introuvable');
     if (user.plan === target) {
-      throw new BadRequestException('Deja sur ce plan');
+      throw new BadRequestException('Déjà sur ce plan');
     }
     const targetFeatures = featuresFor(target);
     if (user.usedSpace > targetFeatures.quotaBytes) {
       throw new ForbiddenException(
-        'Vous depassez le quota du plan cible. Liberez de l espace avant de downgrade.',
+        "Vous dépassez le quota du plan cible. Libérez de l'espace avant de changer.",
       );
     }
     return this.prisma.user.update({
@@ -75,7 +75,7 @@ export class PlansService {
     const features = featuresFor(user.plan);
     if (!features.passwordProtectedShares) {
       throw new ForbiddenException(
-        'Le partage avec mot de passe est reserve aux plans payants. Passez au plan Pro.',
+        'Le partage avec mot de passe est réservé aux plans payants. Passez au plan Pro.',
       );
     }
   }
@@ -88,7 +88,7 @@ export class PlansService {
     const features = featuresFor(user.plan);
     if (!features.customExpiry) {
       throw new ForbiddenException(
-        'L expiration personnalisee est reservee aux plans payants. Passez au plan Pro.',
+        "L'expiration personnalisée est réservée aux plans payants. Passez au plan Pro.",
       );
     }
   }
@@ -104,7 +104,7 @@ export class PlansService {
     });
     if (activeCount >= features.maxActiveShareLinks) {
       throw new ForbiddenException(
-        `Vous avez atteint la limite de ${features.maxActiveShareLinks} liens actifs pour votre plan ${user.plan}. Revoquez d anciens liens ou passez a un plan superieur.`,
+        `Vous avez atteint la limite de ${features.maxActiveShareLinks} liens actifs pour votre plan ${user.plan}. Révoquez d'anciens liens ou passez à un plan supérieur.`,
       );
     }
   }
