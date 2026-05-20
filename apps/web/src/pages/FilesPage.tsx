@@ -1,6 +1,7 @@
 import { ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { toast } from 'sonner';
 
 import { CreateFolderDialog } from '@/components/files/CreateFolderDialog';
 import { FileRow, formatBytes } from '@/components/files/FileRow';
@@ -45,8 +46,12 @@ export function FilesPage() {
     navigate(`/files/${id}`);
   }
 
-  function downloadFolder(id: string) {
-    window.location.href = filesApi.zipFolderUrl(id);
+  async function downloadFolder(id: string, name: string) {
+    try {
+      await filesApi.downloadFolderZip(id, name);
+    } catch (e) {
+      toast.error((e as Error).message ?? 'Echec du telechargement');
+    }
   }
 
   const items = breadcrumb ?? [{ id: null, name: 'Mes fichiers' }];
@@ -95,7 +100,7 @@ export function FilesPage() {
               onOpen={() => openFolder(f.id)}
               onRename={() => setRename({ open: true, type: 'folder', id: f.id, name: f.name })}
               onDelete={() => deleteFolder.mutate(f.id)}
-              onDownload={() => downloadFolder(f.id)}
+              onDownload={() => downloadFolder(f.id, f.name)}
             />
           ))}
 

@@ -99,9 +99,16 @@ export const filesApi = {
     await api.delete(`/files/${id}`);
   },
 
-  zipFolderUrl(folderId: string): string {
+  async downloadFolderZip(folderId: string, folderName: string): Promise<void> {
+    const { data } = await api.get<{ token: string }>(`/files/folders/${folderId}/download-token`);
     const base = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api/v1';
-    return `${base}/files/folders/${folderId}/download`;
+    const url = `${base}/files/folders/${folderId}/download?token=${encodeURIComponent(data.token)}`;
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${folderName}.zip`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   },
 };
 
