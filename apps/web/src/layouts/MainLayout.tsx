@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { NavLink, Outlet } from 'react-router-dom';
 
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { UserMenu } from '@/components/UserMenu';
 import { cn } from '@/lib/utils';
 
@@ -49,7 +50,8 @@ export function MainLayout() {
         </nav>
       </aside>
       <div className="flex-1 flex flex-col">
-        <header className="border-b px-8 py-3 flex justify-end">
+        <header className="border-b px-8 py-3 flex justify-end items-center gap-2">
+          <ThemeToggle />
           <UserMenu />
         </header>
         <main className="flex-1 p-8">
