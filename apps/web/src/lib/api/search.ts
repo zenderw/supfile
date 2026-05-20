@@ -1,5 +1,7 @@
 import { api } from '@/lib/api';
 
+export type SearchCategory = 'all' | 'image' | 'video' | 'audio' | 'pdf' | 'document' | 'other';
+
 export interface SearchFolder {
   id: string;
   name: string;
@@ -22,11 +24,21 @@ export interface SearchResult {
   query: string;
 }
 
+export interface SearchOptions {
+  type?: 'all' | 'folder' | 'file';
+  category?: SearchCategory;
+  from?: string;
+  to?: string;
+}
+
 export const searchApi = {
-  async run(q: string, type: 'all' | 'folder' | 'file' = 'all'): Promise<SearchResult> {
-    const { data } = await api.get<SearchResult>('/search', {
-      params: { q, type },
-    });
+  async run(q: string, options: SearchOptions = {}): Promise<SearchResult> {
+    const params: Record<string, string> = { q };
+    if (options.type && options.type !== 'all') params.type = options.type;
+    if (options.category && options.category !== 'all') params.category = options.category;
+    if (options.from) params.from = options.from;
+    if (options.to) params.to = options.to;
+    const { data } = await api.get<SearchResult>('/search', { params });
     return data;
   },
 };
