@@ -34,10 +34,15 @@ export class SearchService {
   constructor(private readonly prisma: PrismaService) {}
 
   async search(userId: string, dto: SearchQueryDto) {
-    const q = dto.q.trim();
+    const q = (dto.q ?? '').trim();
     const limit = dto.limit ?? 50;
     const type = dto.type ?? 'all';
     const category = dto.category ?? 'all';
+
+    const hasFilter = q.length > 0 || category !== 'all' || !!dto.from || !!dto.to;
+    if (!hasFilter) {
+      return { folders: [], files: [], query: q };
+    }
 
     const wantFolders = (type === 'all' || type === 'folder') && category === 'all';
     const wantFiles = type === 'all' || type === 'file';
@@ -53,7 +58,7 @@ export class SearchService {
     const fileWhere: Prisma.FileWhereInput = {
       ownerId: userId,
       deletedAt: null,
-      name: { contains: q, mode: 'insensitive' },
+      ...(q ? { name: { contains: q, mode: 'insensitive' } } : {}),
       ...(dateFilter ? { updatedAt: dateFilter } : {}),
     };
 
@@ -85,7 +90,7 @@ export class SearchService {
             where: {
               ownerId: userId,
               deletedAt: null,
-              name: { contains: q, mode: 'insensitive' },
+              ...(q ? { name: { contains: q, mode: 'insensitive' } } : {}),
               ...(dateFilter ? { updatedAt: dateFilter } : {}),
             },
             select: { id: true, name: true, parentId: true, updatedAt: true },

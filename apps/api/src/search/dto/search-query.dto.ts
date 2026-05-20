@@ -1,12 +1,12 @@
 import { Transform } from 'class-transformer';
-import { IsIn, IsInt, IsISO8601, IsOptional, IsString, Max, Min, MinLength } from 'class-validator';
+import { IsIn, IsInt, IsISO8601, IsOptional, IsString, Max, Min } from 'class-validator';
 
 export type SearchCategory = 'all' | 'image' | 'video' | 'audio' | 'pdf' | 'document' | 'other';
 
 export class SearchQueryDto {
+  @IsOptional()
   @IsString()
-  @MinLength(1)
-  q!: string;
+  q?: string;
 
   @IsOptional()
   @IsIn(['all', 'folder', 'file'])

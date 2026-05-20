@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { FileIcon, Folder, Search as SearchIcon } from 'lucide-react';
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { formatBytes } from '@/components/files/FileRow';
 import { Button } from '@/components/ui/button';
@@ -41,20 +41,48 @@ const DATE_RANGES: { value: DateRange; label: string }[] = [
   { value: 'year', label: 'Cette année' },
 ];
 
+function isValidCategory(v: string | null): v is SearchCategory {
+  return !!v && CATEGORIES.some((c) => c.value === v);
+}
+
+function isValidDateRange(v: string | null): v is DateRange {
+  return !!v && DATE_RANGES.some((r) => r.value === v);
+}
+
 export function SearchPage() {
   const navigate = useNavigate();
-  const [q, setQ] = useState('');
-  const [category, setCategory] = useState<SearchCategory>('all');
-  const [dateRange, setDateRange] = useState<DateRange>('all');
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const initialQ = searchParams.get('q') ?? '';
+  const initialCategory: SearchCategory = isValidCategory(searchParams.get('category'))
+    ? (searchParams.get('category') as SearchCategory)
+    : 'all';
+  const initialRange: DateRange = isValidDateRange(searchParams.get('date'))
+    ? (searchParams.get('date') as DateRange)
+    : 'all';
+
+  const [q, setQ] = useState(initialQ);
+  const [category, setCategory] = useState<SearchCategory>(initialCategory);
+  const [dateRange, setDateRange] = useState<DateRange>(initialRange);
+
   const dq = useDebounced(q, 300);
 
-  const enabled = dq.trim().length >= 2;
+  useEffect(() => {
+    const next = new URLSearchParams();
+    if (dq.trim()) next.set('q', dq.trim());
+    if (category !== 'all') next.set('category', category);
+    if (dateRange !== 'all') next.set('date', dateRange);
+    setSearchParams(next, { replace: true });
+  }, [dq, category, dateRange, setSearchParams]);
+
+  const cleanQ = dq.trim();
+  const enabled = cleanQ.length >= 2 || category !== 'all' || dateRange !== 'all';
 
   const { data, isFetching } = useQuery({
-    queryKey: ['search', dq, category, dateRange],
+    queryKey: ['search', cleanQ, category, dateRange],
     queryFn: () => {
       const dates = rangeToDates(dateRange);
-      return searchApi.run(dq.trim(), {
+      return searchApi.run(cleanQ, {
         category,
         from: dates.from,
         to: dates.to,
@@ -65,11 +93,13 @@ export function SearchPage() {
   });
 
   function resetFilters() {
+    setQ('');
     setCategory('all');
     setDateRange('all');
   }
 
   const hasActiveFilter = category !== 'all' || dateRange !== 'all';
+  const activeCategoryLabel = CATEGORIES.find((c) => c.value === category)?.label;
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -124,20 +154,28 @@ export function SearchPage() {
         </div>
       </div>
 
-      {hasActiveFilter && (
+      {(hasActiveFilter || cleanQ) && (
         <Button variant="ghost" size="sm" onClick={resetFilters}>
-          Réinitialiser les filtres
+          Réinitialiser
         </Button>
       )}
 
-      {!enabled && <p className="text-sm text-muted-foreground">Tapez au moins 2 caractères.</p>}
+      {!enabled && (
+        <p className="text-sm text-muted-foreground">
+          Tapez au moins 2 caractères ou sélectionnez un filtre.
+        </p>
+      )}
 
       {enabled && isFetching && <p className="text-sm text-muted-foreground">Recherche...</p>}
 
       {enabled && data && (
         <div className="space-y-6">
           {data.folders.length === 0 && data.files.length === 0 && (
-            <p className="text-sm text-muted-foreground">Aucun résultat pour « {dq} ».</p>
+            <p className="text-sm text-muted-foreground">
+              {cleanQ
+                ? `Aucun résultat pour « ${cleanQ} ».`
+                : `Aucun fichier ${activeCategoryLabel?.toLowerCase() ?? ''} ne correspond aux filtres.`}
+            </p>
           )}
 
           {data.folders.length > 0 && (
