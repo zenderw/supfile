@@ -10,9 +10,10 @@ Le dossier [`docs/`](docs/) contient toute la documentation, organisée en fichi
 
 - [01-INSTALLATION.md](docs/01-INSTALLATION.md) — prérequis et démarrage
 - [02-DEPLOIEMENT.md](docs/02-DEPLOIEMENT.md) — variables d'env, conteneurs, sauvegarde
-- [03-ARCHITECTURE.md](docs/03-ARCHITECTURE.md) — choix techno, modèle de données, UML
-- [04-API.md](docs/04-API.md) — endpoints REST
+- [03-ARCHITECTURE.md](docs/03-ARCHITECTURE.md) — choix techno, modèle de données
+- [04-API.md](docs/04-API.md) — pointeur vers Swagger
 - [05-SECURITE.md](docs/05-SECURITE.md) — auth, scoping, secrets
+- [06-DIAGRAMMES-UML.md](docs/06-DIAGRAMMES-UML.md) — cas d'usage, classes, séquences, déploiement
 - [MANUEL-UTILISATEUR.md](docs/MANUEL-UTILISATEUR.md) — guide utilisateur final
 
 ## Stack technique
@@ -44,6 +45,7 @@ supfile/
 │   ├── 03-ARCHITECTURE.md
 │   ├── 04-API.md
 │   ├── 05-SECURITE.md
+│   ├── 06-DIAGRAMMES-UML.md
 │   └── MANUEL-UTILISATEUR.md
 ├── docker-compose.yml       production (postgres + api + web)
 ├── docker-compose.dev.yml   dev (postgres + adminer)
