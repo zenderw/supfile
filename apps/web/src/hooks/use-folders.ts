@@ -81,6 +81,7 @@ export function useDeleteFolder(parentId: string | null) {
     mutationFn: (id: string) => foldersApi.remove(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: folderKeys.list(parentId) });
+      qc.invalidateQueries({ queryKey: folderKeys.trash });
       toast.success('Dossier déplacé dans la corbeille');
     },
     onError: (err) => toast.error(extractErrorMessage(err)),
@@ -93,6 +94,7 @@ export function useDeleteFile(parentId: string | null) {
     mutationFn: (id: string) => filesApi.remove(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: folderKeys.list(parentId) });
+      qc.invalidateQueries({ queryKey: folderKeys.trash });
       toast.success('Fichier déplacé dans la corbeille');
     },
     onError: (err) => toast.error(extractErrorMessage(err)),
