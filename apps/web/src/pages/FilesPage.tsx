@@ -7,6 +7,7 @@ import { CreateFolderDialog } from '@/components/files/CreateFolderDialog';
 import { FileRow, formatBytes } from '@/components/files/FileRow';
 import { RenameDialog } from '@/components/files/RenameDialog';
 import { ShareDialog } from '@/components/files/ShareDialog';
+import { ShareFolderInternalDialog } from '@/components/files/ShareFolderInternalDialog';
 import { UploadButton } from '@/components/files/UploadButton';
 import { Button } from '@/components/ui/button';
 import {
@@ -41,6 +42,7 @@ export function FilesPage() {
 
   const [rename, setRename] = useState<RenameState | null>(null);
   const [share, setShare] = useState<{ id: string; name: string } | null>(null);
+  const [shareFolder, setShareFolder] = useState<{ id: string; name: string } | null>(null);
 
   function openFolder(id: string) {
     navigate(`/files/${id}`);
@@ -91,18 +93,36 @@ export function FilesPage() {
             <p className="p-8 text-center text-muted-foreground text-sm">Ce dossier est vide</p>
           )}
 
-          {data.folders.map((f) => (
-            <FileRow
-              key={f.id}
-              id={f.id}
-              name={f.name}
-              type="folder"
-              onOpen={() => openFolder(f.id)}
-              onRename={() => setRename({ open: true, type: 'folder', id: f.id, name: f.name })}
-              onDelete={() => deleteFolder.mutate(f.id)}
-              onDownload={() => downloadFolder(f.id, f.name)}
-            />
-          ))}
+          {data.folders.map((f) => {
+            const isShared = 'shared' in f && f.shared;
+            const sharedBy =
+              isShared && 'sharedBy' in f
+                ? (f.sharedBy as { displayName: string } | undefined)
+                : undefined;
+            return (
+              <FileRow
+                key={f.id}
+                id={f.id}
+                name={f.name}
+                type="folder"
+                readOnly={isShared}
+                sharedBadge={
+                  isShared && sharedBy ? `Partagé par ${sharedBy.displayName}` : undefined
+                }
+                onOpen={() => openFolder(f.id)}
+                onRename={
+                  isShared
+                    ? undefined
+                    : () => setRename({ open: true, type: 'folder', id: f.id, name: f.name })
+                }
+                onDelete={isShared ? undefined : () => deleteFolder.mutate(f.id)}
+                onDownload={() => downloadFolder(f.id, f.name)}
+                onShareWithUser={
+                  isShared ? undefined : () => setShareFolder({ id: f.id, name: f.name })
+                }
+              />
+            );
+          })}
 
           {data.files.map((f) => (
             <FileRow
@@ -127,6 +147,15 @@ export function FilesPage() {
           onOpenChange={(o) => !o && setShare(null)}
           fileId={share.id}
           fileName={share.name}
+        />
+      )}
+
+      {shareFolder && (
+        <ShareFolderInternalDialog
+          open={!!shareFolder}
+          onOpenChange={(o) => !o && setShareFolder(null)}
+          folderId={shareFolder.id}
+          folderName={shareFolder.name}
         />
       )}
 

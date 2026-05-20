@@ -6,6 +6,8 @@ export interface FolderItem {
   parentId: string | null;
   createdAt: string;
   updatedAt: string;
+  shared?: boolean;
+  sharedBy?: { id: string; displayName: string; email: string };
 }
 
 export interface FileItem {
