@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Patch,
   Post,
   Req,
   Res,
@@ -17,10 +18,12 @@ import type { Request, Response } from 'express';
 import { EnvConfig } from '../config/env.config';
 
 import { CurrentUser } from './decorators/current-user.decorator';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { GoogleMobileDto } from './dto/google-mobile.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshDto } from './dto/refresh.dto';
 import { RegisterDto } from './dto/register.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { AuthService } from './services/auth.service';
@@ -59,6 +62,21 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   me(@CurrentUser() user: JwtPayload) {
     return this.auth.getCurrentUser(user.sub);
+  }
+
+  @Patch('me')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  updateMe(@CurrentUser() user: JwtPayload, @Body() dto: UpdateProfileDto) {
+    return this.auth.updateProfile(user.sub, dto);
+  }
+
+  @Post('me/password')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async changePassword(@CurrentUser() user: JwtPayload, @Body() dto: ChangePasswordDto) {
+    await this.auth.changePassword(user.sub, dto.oldPassword, dto.newPassword);
   }
 
   @Get('google')

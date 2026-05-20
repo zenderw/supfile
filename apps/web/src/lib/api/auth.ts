@@ -27,4 +27,11 @@ export const authApi = {
     const { data } = await api.get<User>('/auth/me');
     return data;
   },
+  async updateMe(input: { email?: string; displayName?: string; avatarUrl?: string | null }) {
+    const { data } = await api.patch<User>('/auth/me', input);
+    return data;
+  },
+  async changePassword(input: { oldPassword: string; newPassword: string }) {
+    await api.post('/auth/me/password', input);
+  },
 };

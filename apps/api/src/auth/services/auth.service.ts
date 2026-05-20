@@ -1,4 +1,9 @@
-import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ErrorCode } from '@supfile/shared';
 import type { User as UserShared } from '@supfile/shared';
 import { OAuth2Client } from 'google-auth-library';
@@ -180,6 +185,78 @@ export class AuthService {
       throw new UnauthorizedException();
     }
     return this.toShared(user);
+  }
+
+  async updateProfile(
+    userId: string,
+    input: { email?: string; displayName?: string; avatarUrl?: string | null },
+  ): Promise<UserShared> {
+    const data: { email?: string; displayName?: string; avatarUrl?: string | null } = {};
+
+    if (input.email !== undefined) {
+      const normalized = input.email.toLowerCase().trim();
+      const taken = await this.prisma.user.findFirst({
+        where: { email: normalized, NOT: { id: userId } },
+        select: { id: true },
+      });
+      if (taken) {
+        throw new ConflictException({
+          code: ErrorCode.EMAIL_ALREADY_USED,
+          message: 'Cet email est déjà utilisé',
+        });
+      }
+      data.email = normalized;
+    }
+
+    if (input.displayName !== undefined) {
+      const trimmed = input.displayName.trim();
+      if (trimmed.length < 2) {
+        throw new BadRequestException('Le nom doit faire au moins 2 caractères');
+      }
+      data.displayName = trimmed;
+    }
+
+    if (input.avatarUrl !== undefined) {
+      data.avatarUrl = input.avatarUrl;
+    }
+
+    if (Object.keys(data).length === 0) {
+      throw new BadRequestException('Rien à modifier');
+    }
+
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data,
+    });
+
+    return this.toShared(updated);
+  }
+
+  async changePassword(userId: string, oldPassword: string, newPassword: string): Promise<void> {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw new UnauthorizedException();
+    }
+    if (!user.passwordHash) {
+      throw new BadRequestException(
+        'Ce compte a été créé via OAuth, il n a pas de mot de passe local',
+      );
+    }
+    const ok = await this.hash.compare(oldPassword, user.passwordHash);
+    if (!ok) {
+      throw new UnauthorizedException({
+        code: ErrorCode.INVALID_CREDENTIALS,
+        message: 'Ancien mot de passe incorrect',
+      });
+    }
+    if (newPassword.length < 8) {
+      throw new BadRequestException('Le nouveau mot de passe doit faire au moins 8 caractères');
+    }
+    const newHash = await this.hash.hash(newPassword);
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash: newHash },
+    });
   }
 
   private toShared(user: {
