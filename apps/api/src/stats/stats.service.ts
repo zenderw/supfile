@@ -11,7 +11,7 @@ export class StatsService {
   ) {}
 
   async forUser(userId: string) {
-    const [user, totalFolders, totalFiles, recent, byMime, quota] = await Promise.all([
+    const [user, totalFolders, totalFiles, recent, aggregates, quota] = await Promise.all([
       this.prisma.user.findUnique({
         where: { id: userId },
         select: { usedSpace: true, plan: true },
@@ -29,7 +29,7 @@ export class StatsService {
           updatedAt: true,
         },
         orderBy: { updatedAt: 'desc' },
-        take: 10,
+        take: 5,
       }),
       this.aggregateByCategory(userId),
       this.plans.getQuotaFor(userId),
@@ -42,22 +42,33 @@ export class StatsService {
       totalFolders,
       totalFiles,
       recentFiles: recent,
-      byCategory: byMime,
+      byCategory: aggregates.counts,
+      sizeByCategory: aggregates.sizes,
     };
   }
 
   private async aggregateByCategory(userId: string) {
     const all = await this.prisma.file.findMany({
       where: { ownerId: userId, deletedAt: null },
-      select: { mimeType: true },
+      select: { mimeType: true, size: true },
     });
-    const buckets = { image: 0, video: 0, audio: 0, pdf: 0, document: 0, other: 0 };
+    const counts = { image: 0, video: 0, audio: 0, pdf: 0, document: 0, other: 0 };
+    const sizes = {
+      image: BigInt(0),
+      video: BigInt(0),
+      audio: BigInt(0),
+      pdf: BigInt(0),
+      document: BigInt(0),
+      other: BigInt(0),
+    };
+
     for (const f of all) {
+      let key: keyof typeof counts;
       const m = f.mimeType;
-      if (m.startsWith('image/')) buckets.image++;
-      else if (m.startsWith('video/')) buckets.video++;
-      else if (m.startsWith('audio/')) buckets.audio++;
-      else if (m === 'application/pdf') buckets.pdf++;
+      if (m.startsWith('image/')) key = 'image';
+      else if (m.startsWith('video/')) key = 'video';
+      else if (m.startsWith('audio/')) key = 'audio';
+      else if (m === 'application/pdf') key = 'pdf';
       else if (
         m.startsWith('text/') ||
         m.includes('word') ||
@@ -66,9 +77,24 @@ export class StatsService {
         m.includes('document') ||
         m.includes('presentation')
       ) {
-        buckets.document++;
-      } else buckets.other++;
+        key = 'document';
+      } else {
+        key = 'other';
+      }
+      counts[key]++;
+      sizes[key] += f.size;
     }
-    return buckets;
+
+    return {
+      counts,
+      sizes: {
+        image: sizes.image.toString(),
+        video: sizes.video.toString(),
+        audio: sizes.audio.toString(),
+        pdf: sizes.pdf.toString(),
+        document: sizes.document.toString(),
+        other: sizes.other.toString(),
+      },
+    };
   }
 }

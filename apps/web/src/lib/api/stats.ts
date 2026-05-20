@@ -9,6 +9,15 @@ export interface CategoryCounts {
   other: number;
 }
 
+export interface CategorySizes {
+  image: string;
+  video: string;
+  audio: string;
+  pdf: string;
+  document: string;
+  other: string;
+}
+
 export interface DashboardStats {
   usedSpace: string;
   quota: string;
@@ -24,6 +33,7 @@ export interface DashboardStats {
     updatedAt: string;
   }>;
   byCategory: CategoryCounts;
+  sizeByCategory: CategorySizes;
 }
 
 export const statsApi = {

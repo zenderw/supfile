@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { FileIcon, FileText, Film, FolderIcon, ImageIcon, Music } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
+import { StorageDonut } from '@/components/StorageDonut';
 import { formatBytes } from '@/components/files/FileRow';
 import { statsApi } from '@/lib/api/stats';
 
@@ -74,10 +75,18 @@ export function HomePage() {
         </button>
       </section>
 
-      {/* repartition par categorie */}
+      {/* repartition par categorie - graphique */}
+      <section className="border rounded-lg p-6 space-y-4">
+        <h2 className="text-sm font-semibold text-muted-foreground uppercase">
+          Répartition de l'espace
+        </h2>
+        <StorageDonut sizes={data.sizeByCategory} />
+      </section>
+
+      {/* nombre de fichiers par categorie */}
       <section>
         <h2 className="text-sm font-semibold text-muted-foreground uppercase mb-3">
-          Par catégorie
+          Par catégorie (nombre)
         </h2>
         <div className="grid grid-cols-3 gap-3">
           {categoryIcons.map(({ key, label, icon: Icon, count }) => (
