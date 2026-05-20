@@ -27,7 +27,7 @@ export class FilesService {
   ) {}
 
   async getMetadata(userId: string, fileId: string) {
-    const file = await this.findOwned(userId, fileId);
+    const file = await this.findReadable(userId, fileId);
     return {
       id: file.id,
       name: file.name,
@@ -40,7 +40,7 @@ export class FilesService {
   }
 
   async findByIdInternal(userId: string, fileId: string) {
-    return this.findOwned(userId, fileId);
+    return this.findReadable(userId, fileId);
   }
 
   async update(userId: string, fileId: string, dto: UpdateFileDto) {
@@ -183,6 +183,30 @@ export class FilesService {
     return file;
   }
 
+  private async findReadable(userId: string, fileId: string) {
+    const file = await this.prisma.file.findUnique({ where: { id: fileId } });
+    if (!file || file.deletedAt) {
+      throw new NotFoundException({ code: NOT_FOUND });
+    }
+    if (file.ownerId === userId) return file;
+
+    let currentId = file.folderId;
+    while (currentId) {
+      const share = await this.prisma.folderShare.findUnique({
+        where: { folderId_toUserId: { folderId: currentId, toUserId: userId } },
+        select: { id: true },
+      });
+      if (share) return file;
+      const parent: { parentId: string | null } | null = await this.prisma.folder.findUnique({
+        where: { id: currentId },
+        select: { parentId: true },
+      });
+      currentId = parent?.parentId ?? null;
+    }
+
+    throw new NotFoundException({ code: NOT_FOUND });
+  }
+
   private async assertFolderOwnership(userId: string, folderId: string): Promise<void> {
     const folder = await this.prisma.folder.findUnique({
       where: { id: folderId },
@@ -200,6 +224,7 @@ function sanitizeFileName(raw: string): string {
   try {
     name = Buffer.from(raw, 'latin1').toString('utf8');
   } catch {
+    // si conversion échoue, on garde le nom brut
   }
   const cleaned = name
     // eslint-disable-next-line no-control-regex

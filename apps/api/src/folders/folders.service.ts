@@ -24,12 +24,45 @@ export class FoldersService {
 
   async list(userId: string, parentId: string | null) {
     if (parentId) {
-      await this.assertOwnership(userId, parentId);
+      await this.assertReadAccess(userId, parentId);
+      const folder = await this.prisma.folder.findUniqueOrThrow({
+        where: { id: parentId },
+        select: { ownerId: true },
+      });
+
+      const [folders, files] = await Promise.all([
+        this.prisma.folder.findMany({
+          where: { ownerId: folder.ownerId, parentId, deletedAt: null },
+          orderBy: { name: 'asc' },
+          select: {
+            id: true,
+            name: true,
+            parentId: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        }),
+        this.prisma.file.findMany({
+          where: { ownerId: folder.ownerId, folderId: parentId, deletedAt: null },
+          orderBy: { name: 'asc' },
+          select: {
+            id: true,
+            name: true,
+            size: true,
+            mimeType: true,
+            folderId: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        }),
+      ]);
+
+      return { folders, files };
     }
 
-    const [folders, files] = await Promise.all([
+    const [ownFolders, files, sharedShares] = await Promise.all([
       this.prisma.folder.findMany({
-        where: { ownerId: userId, parentId, deletedAt: null },
+        where: { ownerId: userId, parentId: null, deletedAt: null },
         orderBy: { name: 'asc' },
         select: {
           id: true,
@@ -40,7 +73,7 @@ export class FoldersService {
         },
       }),
       this.prisma.file.findMany({
-        where: { ownerId: userId, folderId: parentId, deletedAt: null },
+        where: { ownerId: userId, folderId: null, deletedAt: null },
         orderBy: { name: 'asc' },
         select: {
           id: true,
@@ -52,12 +85,36 @@ export class FoldersService {
           updatedAt: true,
         },
       }),
+      this.prisma.folderShare.findMany({
+        where: { toUserId: userId, folder: { deletedAt: null } },
+        select: {
+          folder: {
+            select: {
+              id: true,
+              name: true,
+              parentId: true,
+              createdAt: true,
+              updatedAt: true,
+            },
+          },
+          fromUser: { select: { id: true, displayName: true, email: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
     ]);
 
-    return { folders, files };
+    const sharedFolders = sharedShares.map((s) => ({
+      ...s.folder,
+      shared: true as const,
+      sharedBy: s.fromUser,
+    }));
+
+    return { folders: [...ownFolders, ...sharedFolders], files };
   }
 
   async breadcrumb(userId: string, folderId: string): Promise<BreadcrumbItem[]> {
+    await this.assertReadAccess(userId, folderId);
+
     const items: BreadcrumbItem[] = [];
     let currentId: string | null = folderId;
     let depth = 0;
@@ -68,23 +125,25 @@ export class FoldersService {
         name: string;
         parentId: string | null;
         ownerId: string;
-        deletedAt: Date | null;
       } | null = await this.prisma.folder.findUnique({
         where: { id: currentId },
-        select: {
-          id: true,
-          name: true,
-          parentId: true,
-          ownerId: true,
-          deletedAt: true,
-        },
+        select: { id: true, name: true, parentId: true, ownerId: true },
       });
 
-      if (!folder || folder.ownerId !== userId || folder.deletedAt) {
-        throw new NotFoundException({ code: NOT_FOUND });
-      }
+      if (!folder) throw new NotFoundException({ code: NOT_FOUND });
 
       items.unshift({ id: folder.id, name: folder.name });
+
+      if (folder.ownerId !== userId) {
+        const share = await this.prisma.folderShare.findUnique({
+          where: { folderId_toUserId: { folderId: folder.id, toUserId: userId } },
+          select: { id: true },
+        });
+        if (share) {
+          break;
+        }
+      }
+
       currentId = folder.parentId;
       depth++;
     }
@@ -208,6 +267,33 @@ export class FoldersService {
     if (!folder || folder.ownerId !== userId || folder.deletedAt) {
       throw new NotFoundException({ code: NOT_FOUND });
     }
+  }
+
+  private async assertReadAccess(userId: string, folderId: string): Promise<void> {
+    const folder = await this.prisma.folder.findUnique({
+      where: { id: folderId },
+      select: { id: true, ownerId: true, deletedAt: true },
+    });
+    if (!folder || folder.deletedAt) {
+      throw new NotFoundException({ code: NOT_FOUND });
+    }
+    if (folder.ownerId === userId) return;
+
+    let currentId: string | null = folder.id;
+    while (currentId) {
+      const share = await this.prisma.folderShare.findUnique({
+        where: { folderId_toUserId: { folderId: currentId, toUserId: userId } },
+        select: { id: true },
+      });
+      if (share) return;
+      const parent: { parentId: string | null } | null = await this.prisma.folder.findUnique({
+        where: { id: currentId },
+        select: { parentId: true },
+      });
+      currentId = parent?.parentId ?? null;
+    }
+
+    throw new NotFoundException({ code: NOT_FOUND });
   }
 
   private async assertDepthLimit(parentId: string): Promise<void> {

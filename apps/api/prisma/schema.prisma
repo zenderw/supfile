@@ -31,6 +31,8 @@ model User {
   folders       Folder[]
   files         File[]
   shareLinks    ShareLink[]
+  outgoingFolderShares FolderShare[] @relation("FolderShareFrom")
+  incomingFolderShares FolderShare[] @relation("FolderShareTo")
 
   @@map("users")
 }
@@ -66,6 +68,7 @@ model Folder {
   parent   Folder?  @relation("FolderHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
   children Folder[] @relation("FolderHierarchy")
   files    File[]
+  shares   FolderShare[]
 
   @@index([ownerId, parentId])
   @@index([ownerId, deletedAt])
@@ -94,6 +97,24 @@ model File {
   @@index([ownerId, deletedAt])
   @@index([ownerId, name])
   @@map("files")
+}
+
+/// Partage d'un dossier entre deux users de la plateforme (lecture seule).
+model FolderShare {
+  id         String   @id @default(uuid()) @db.Uuid
+  folderId   String   @map("folder_id") @db.Uuid
+  fromUserId String   @map("from_user_id") @db.Uuid
+  toUserId   String   @map("to_user_id") @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  folder   Folder @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  fromUser User   @relation("FolderShareFrom", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser   User   @relation("FolderShareTo", fields: [toUserId], references: [id], onDelete: Cascade)
+
+  @@unique([folderId, toUserId])
+  @@index([toUserId])
+  @@index([fromUserId])
+  @@map("folder_shares")
 }
 
 /// Lien de partage public d'un fichier (token aleatoire).
