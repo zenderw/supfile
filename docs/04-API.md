@@ -1,92 +1,36 @@
 # API REST
 
-Toutes les routes API sont préfixées par `/api/v1`. Les routes marquées 🔒 nécessitent un header `Authorization: Bearer <accessToken>`.
+## Documentation interactive Swagger
 
-## Auth
+L'API est documentée via **Swagger UI**, accessible en local à l'adresse :
 
-| Méthode | Route                   | Description                                         |
-| ------- | ----------------------- | --------------------------------------------------- |
-| POST    | `/auth/register`        | Inscription email/mot de passe                      |
-| POST    | `/auth/login`           | Connexion email/mot de passe                        |
-| POST    | `/auth/refresh`         | Échange refresh token contre nouveau access token   |
-| GET     | `/auth/me` 🔒           | Profil de l'utilisateur courant                     |
-| GET     | `/auth/google`          | Démarre le flow OAuth Google (web)                  |
-| GET     | `/auth/google/callback` | Callback Google, redirige vers le front avec tokens |
-| POST    | `/auth/google/mobile`   | Connexion Google depuis mobile (idToken PKCE)       |
+**http://localhost:3000/api/docs**
 
-## Folders
+L'interface permet de :
 
-| Méthode | Route                               | Description                                 |
-| ------- | ----------------------------------- | ------------------------------------------- |
-| GET     | `/folders?parentId=<uuid\|null>` 🔒 | Liste fichiers + sous-dossiers d'un dossier |
-| GET     | `/folders/:id/breadcrumb` 🔒        | Fil d'Ariane d'un dossier                   |
-| POST    | `/folders` 🔒                       | Créer un dossier                            |
-| PATCH   | `/folders/:id` 🔒                   | Renommer un dossier                         |
-| DELETE  | `/folders/:id` 🔒                   | Soft-delete (vers corbeille)                |
+- Visualiser tous les endpoints groupés par module (auth, folders, files, share, search, stats, trash, plans, health)
+- Tester directement les endpoints depuis le navigateur
+- Voir les schémas de requête et de réponse
+- Récupérer la spécification OpenAPI 3.0 brute : http://localhost:3000/api/docs-json
 
-## Files
+## Authentification dans Swagger
 
-| Méthode | Route                                   | Description                                                                               |
-| ------- | --------------------------------------- | ----------------------------------------------------------------------------------------- |
-| POST    | `/files/upload` 🔒                      | Upload (multipart, champ `file`)                                                          |
-| GET     | `/files/:id` 🔒                         | Métadonnées                                                                               |
-| PATCH   | `/files/:id` 🔒                         | Renommer                                                                                  |
-| DELETE  | `/files/:id` 🔒                         | Soft-delete                                                                               |
-| GET     | `/files/:id/download-token` 🔒          | Génère un token signé court (pour passer en query string sur balises `<video>` / `<img>`) |
-| GET     | `/files/:id/download?token=...`         | Téléchargement / streaming (range requests supportées)                                    |
-| GET     | `/files/folders/:id/download-token` 🔒  | Génère un token signé pour télécharger un dossier en ZIP                                  |
-| GET     | `/files/folders/:id/download?token=...` | Téléchargement ZIP à la volée d'un dossier complet                                        |
+Pour tester les endpoints protégés (marqués 🔒) :
 
-## Share
+1. Appeler `POST /auth/login` avec ton email + mot de passe → récupérer le `accessToken`
+2. Cliquer sur le bouton **Authorize** en haut à droite
+3. Coller le token (sans le préfixe `Bearer`)
+4. Tous les endpoints protégés sont maintenant utilisables
 
-| Méthode | Route                             | Description                                                   |
-| ------- | --------------------------------- | ------------------------------------------------------------- |
-| POST    | `/share/files/:fileId` 🔒         | Créer un lien de partage (options : mot de passe, expiration) |
-| GET     | `/share/mine` 🔒                  | Liste de mes liens actifs                                     |
-| DELETE  | `/share/:id` 🔒                   | Révoquer un lien                                              |
-| GET     | `/s/:token`                       | Métadonnées publiques d'un lien                               |
-| POST    | `/s/:token/verify`                | Vérifier le mot de passe d'un lien (10 req/min max)           |
-| GET     | `/s/:token/download?password=...` | Télécharger via lien public                                   |
+Le bouton « Authorize » persiste le token entre rechargements (option `persistAuthorization`).
 
-## Search
+## Préfixe global
 
-| Méthode | Route                                       | Description                                                    |
-| ------- | ------------------------------------------- | -------------------------------------------------------------- |
-| GET     | `/search?q=...&type=...&from=...&to=...` 🔒 | Recherche unifiée fichiers + dossiers, avec filtres optionnels |
-
-## Stats
-
-| Méthode | Route       | Description                                                                |
-| ------- | ----------- | -------------------------------------------------------------------------- |
-| GET     | `/stats` 🔒 | Quota utilisé, total fichiers, fichiers récents, répartition par type MIME |
-
-## Trash
-
-| Méthode | Route                           | Description                     |
-| ------- | ------------------------------- | ------------------------------- |
-| GET     | `/trash` 🔒                     | Liste des éléments en corbeille |
-| POST    | `/trash/folders/:id/restore` 🔒 | Restaurer un dossier            |
-| POST    | `/trash/files/:id/restore` 🔒   | Restaurer un fichier            |
-| DELETE  | `/trash/folders/:id` 🔒         | Purge définitive d'un dossier   |
-| DELETE  | `/trash/files/:id` 🔒           | Purge définitive d'un fichier   |
-
-## Plans (business model freemium)
-
-| Méthode | Route                  | Description                                         |
-| ------- | ---------------------- | --------------------------------------------------- |
-| GET     | `/plans`               | Liste des plans disponibles avec features et tarifs |
-| GET     | `/plans/me` 🔒         | Plan courant + features de l'utilisateur            |
-| POST    | `/plans/me/upgrade` 🔒 | Changer de plan (FREE / PRO / BUSINESS)             |
-
-## Health
-
-| Méthode | Route     | Description                                |
-| ------- | --------- | ------------------------------------------ |
-| GET     | `/health` | Statut API + BDD (pour Docker healthcheck) |
+Toutes les routes API sont préfixées par `/api/v1`. Exemple : la route `POST /auth/login` s'appelle en réalité à `POST http://localhost:3000/api/v1/auth/login`.
 
 ## Format des erreurs
 
-Toutes les erreurs renvoient un JSON au format :
+Toutes les erreurs renvoient un JSON au format NestJS standard :
 
 ```json
 {
@@ -95,7 +39,7 @@ Toutes les erreurs renvoient un JSON au format :
 }
 ```
 
-Codes HTTP utilisés :
+## Codes HTTP utilisés
 
 | Code | Sens                                                          |
 | ---- | ------------------------------------------------------------- |
