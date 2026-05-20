@@ -1,8 +1,10 @@
 import { formatBytes } from '@/components/files/FileRow';
+import type { SearchCategory } from '@/lib/api/search';
 import type { CategorySizes } from '@/lib/api/stats';
 
 interface Props {
   sizes: CategorySizes;
+  onCategoryClick?: (category: SearchCategory) => void;
 }
 
 interface Slice {
@@ -25,7 +27,7 @@ const RADIUS = 60;
 const STROKE = 20;
 const CIRC = 2 * Math.PI * RADIUS;
 
-export function StorageDonut({ sizes }: Props) {
+export function StorageDonut({ sizes, onCategoryClick }: Props) {
   const slices: Slice[] = (Object.keys(PALETTE) as (keyof CategorySizes)[]).map((k) => ({
     key: k,
     label: PALETTE[k].label,
@@ -61,7 +63,13 @@ export function StorageDonut({ sizes }: Props) {
           strokeDasharray={`${dash} ${CIRC - dash}`}
           strokeDashoffset={-offset}
           transform="rotate(-90 80 80)"
-        />
+          style={onCategoryClick ? { cursor: 'pointer' } : undefined}
+          onClick={onCategoryClick ? () => onCategoryClick(s.key) : undefined}
+        >
+          <title>
+            {s.label} : {formatBytes(String(s.bytes))}
+          </title>
+        </circle>
       );
       offset += dash;
       return arc;
@@ -104,20 +112,36 @@ export function StorageDonut({ sizes }: Props) {
         </text>
       </svg>
 
-      <div className="flex-1 grid grid-cols-2 gap-2 text-sm">
+      <div className="flex-1 grid grid-cols-2 gap-1 text-sm">
         {slices
           .filter((s) => s.bytes > 0)
           .sort((a, b) => b.bytes - a.bytes)
-          .map((s) => (
-            <div key={s.key} className="flex items-center gap-2">
-              <span
-                className="inline-block h-3 w-3 rounded-sm"
-                style={{ backgroundColor: s.color }}
-              />
-              <span className="text-muted-foreground flex-1">{s.label}</span>
-              <span className="font-medium">{formatBytes(String(s.bytes))}</span>
-            </div>
-          ))}
+          .map((s) => {
+            const content = (
+              <>
+                <span
+                  className="inline-block h-3 w-3 rounded-sm"
+                  style={{ backgroundColor: s.color }}
+                />
+                <span className="text-muted-foreground flex-1">{s.label}</span>
+                <span className="font-medium">{formatBytes(String(s.bytes))}</span>
+              </>
+            );
+            return onCategoryClick ? (
+              <button
+                key={s.key}
+                type="button"
+                onClick={() => onCategoryClick(s.key)}
+                className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-muted/40 text-left"
+              >
+                {content}
+              </button>
+            ) : (
+              <div key={s.key} className="flex items-center gap-2 px-2 py-1">
+                {content}
+              </div>
+            );
+          })}
       </div>
     </div>
   );

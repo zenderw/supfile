@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { StorageDonut } from '@/components/StorageDonut';
 import { formatBytes } from '@/components/files/FileRow';
+import type { SearchCategory } from '@/lib/api/search';
 import { statsApi } from '@/lib/api/stats';
 
 function pct(used: string, quota: string): number {
@@ -26,14 +27,23 @@ export function HomePage() {
 
   const usedPct = pct(data.usedSpace, data.quota);
 
-  const categoryIcons = [
+  const categoryIcons: {
+    key: SearchCategory;
+    label: string;
+    icon: typeof FileIcon;
+    count: number;
+  }[] = [
     { key: 'image', label: 'Images', icon: ImageIcon, count: data.byCategory.image },
     { key: 'video', label: 'Vidéos', icon: Film, count: data.byCategory.video },
     { key: 'audio', label: 'Audio', icon: Music, count: data.byCategory.audio },
     { key: 'pdf', label: 'PDF', icon: FileText, count: data.byCategory.pdf },
     { key: 'document', label: 'Documents', icon: FileText, count: data.byCategory.document },
     { key: 'other', label: 'Autres', icon: FileIcon, count: data.byCategory.other },
-  ] as const;
+  ];
+
+  function openCategory(category: SearchCategory) {
+    navigate(`/search?category=${category}`);
+  }
 
   return (
     <div className="space-y-8">
@@ -80,7 +90,7 @@ export function HomePage() {
         <h2 className="text-sm font-semibold text-muted-foreground uppercase">
           Répartition de l'espace
         </h2>
-        <StorageDonut sizes={data.sizeByCategory} />
+        <StorageDonut sizes={data.sizeByCategory} onCategoryClick={openCategory} />
       </section>
 
       {/* nombre de fichiers par categorie */}
@@ -90,13 +100,19 @@ export function HomePage() {
         </h2>
         <div className="grid grid-cols-3 gap-3">
           {categoryIcons.map(({ key, label, icon: Icon, count }) => (
-            <div key={key} className="border rounded-lg p-3 flex items-center gap-3">
+            <button
+              key={key}
+              type="button"
+              onClick={() => openCategory(key)}
+              disabled={count === 0}
+              className="border rounded-lg p-3 flex items-center gap-3 text-left hover:bg-muted/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+            >
               <Icon className="h-5 w-5 text-muted-foreground" />
               <div>
                 <div className="text-lg font-semibold leading-tight">{count}</div>
                 <div className="text-xs text-muted-foreground">{label}</div>
               </div>
-            </div>
+            </button>
           ))}
         </div>
       </section>
