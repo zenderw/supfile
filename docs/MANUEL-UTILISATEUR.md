@@ -119,12 +119,27 @@ Tout lien partagé peut être révoqué côté propriétaire (un lien révoqué 
 - **Web** : menu utilisateur en haut à droite → « Se déconnecter ».
 - **Mobile** : bouton « Se déconnecter » en bas de l'accueil.
 
-## Quota et limites
+## Plans d'abonnement
 
-- **Quota par utilisateur** : 30 Go
-- **Taille max d'un fichier** : 5 Go
+SUPFile propose trois plans, accessibles depuis la page « Abonnement » dans la sidebar.
+
+|                                    | **Free** (gratuit) | **Pro** (4,99 €/mois) | **Business** (14,99 €/mois) |
+| ---------------------------------- | ------------------ | --------------------- | --------------------------- |
+| Quota                              | 5 Go               | 100 Go                | 1 To                        |
+| Taille max par fichier             | 500 Mo             | 5 Go                  | 20 Go                       |
+| Liens de partage actifs simultanés | 3                  | 100                   | 1000                        |
+| Mot de passe sur lien              | ❌                 | ✅                    | ✅                          |
+| Expiration personnalisée           | ❌                 | ✅                    | ✅                          |
+| Support prioritaire                | ❌                 | ❌                    | ✅                          |
+
+Par défaut tout nouveau compte est en plan **Free**. L'upgrade se fait depuis la page « Abonnement » en un clic (simulation pour le projet académique — pas de paiement réel).
+
+## Limites techniques
+
+- **Taille max upload** : selon le plan (500 Mo Free / 5 Go Pro / 20 Go Business)
 - **Profondeur maximale de dossiers** : 50 niveaux
 - **Lien de partage** : token aléatoire de 32 caractères, mot de passe optionnel (bcrypt), expiration jusqu'à 30 jours
+- **Session** : token d'accès valide 15 min, refresh automatique pendant 30 jours
 
 ## Sécurité
 
