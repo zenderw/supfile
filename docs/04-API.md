@@ -16,13 +16,13 @@ Toutes les routes API sont préfixées par `/api/v1`. Les routes marquées 🔒 
 
 ## Folders
 
-| Méthode | Route                        | Description                  |
-| ------- | ---------------------------- | ---------------------------- | ------------------------------------------- |
-| GET     | `/folders?parentId=<uuid     | null>` 🔒                    | Liste fichiers + sous-dossiers d'un dossier |
-| GET     | `/folders/:id/breadcrumb` 🔒 | Fil d'Ariane d'un dossier    |
-| POST    | `/folders` 🔒                | Créer un dossier             |
-| PATCH   | `/folders/:id` 🔒            | Renommer un dossier          |
-| DELETE  | `/folders/:id` 🔒            | Soft-delete (vers corbeille) |
+| Méthode | Route                               | Description                                 |
+| ------- | ----------------------------------- | ------------------------------------------- |
+| GET     | `/folders?parentId=<uuid\|null>` 🔒 | Liste fichiers + sous-dossiers d'un dossier |
+| GET     | `/folders/:id/breadcrumb` 🔒        | Fil d'Ariane d'un dossier                   |
+| POST    | `/folders` 🔒                       | Créer un dossier                            |
+| PATCH   | `/folders/:id` 🔒                   | Renommer un dossier                         |
+| DELETE  | `/folders/:id` 🔒                   | Soft-delete (vers corbeille)                |
 
 ## Files
 
