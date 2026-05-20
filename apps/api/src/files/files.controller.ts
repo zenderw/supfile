@@ -88,19 +88,42 @@ export class FilesController {
     await this.files.softDelete(user.sub, id);
   }
 
-  @Get('folders/:id/download')
+  @Get('folders/:id/download-token')
   @UseGuards(JwtAuthGuard)
-  async downloadFolder(
+  getFolderDownloadToken(
     @CurrentUser() user: JwtPayload,
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+  ) {
+    return { token: this.downloadTokens.signFolder(user.sub, id) };
+  }
+
+  @Get('folders/:id/download')
+  async downloadFolder(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Query('token') token: string,
     @Res() res: Response,
   ): Promise<void> {
+    if (!token) {
+      throw new UnauthorizedException('Token manquant');
+    }
+
+    let payload;
+    try {
+      payload = this.downloadTokens.verifyFolder(token);
+    } catch {
+      throw new UnauthorizedException('Token invalide ou expiré');
+    }
+
+    if (payload.folderId !== id) {
+      throw new UnauthorizedException('Token ne correspond pas au dossier');
+    }
+
     const safeName = `archive-${id.slice(0, 8)}`;
     res.setHeader('Content-Type', 'application/zip');
     res.setHeader('Content-Disposition', `attachment; filename="${safeName}.zip"`);
     res.setHeader('Cache-Control', 'no-store');
 
-    await this.zip.streamFolder(user.sub, id, res);
+    await this.zip.streamFolder(payload.sub, id, res);
   }
 
   @Get(':id/download-token')
