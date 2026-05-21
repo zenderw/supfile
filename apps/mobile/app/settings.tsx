@@ -1,9 +1,11 @@
 import { useMutation } from '@tanstack/react-query';
+import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Image,
   Pressable,
   ScrollView,
   Text,
@@ -14,18 +16,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { authApi } from '@/lib/api/auth';
 import { useAuthStore } from '@/stores/auth.store';
-import { useThemeStore } from '@/stores/theme.store';
 
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const user = useAuthStore((s) => s.user);
   const setSession = useAuthStore((s) => s.setSession);
-  const theme = useThemeStore((s) => s.theme);
-  const toggleTheme = useThemeStore((s) => s.toggle);
 
   const [displayName, setDisplayName] = useState(user?.displayName ?? '');
   const [email, setEmail] = useState(user?.email ?? '');
-  const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl ?? '');
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [newPassword2, setNewPassword2] = useState('');
@@ -34,7 +32,6 @@ export default function SettingsScreen() {
     if (user) {
       setDisplayName(user.displayName);
       setEmail(user.email);
-      setAvatarUrl(user.avatarUrl ?? '');
     }
   }, [user]);
 
@@ -64,16 +61,49 @@ export default function SettingsScreen() {
 
   function handleSaveProfile() {
     if (!user) return;
-    const patch: { email?: string; displayName?: string; avatarUrl?: string | null } = {};
+    const patch: { email?: string; displayName?: string } = {};
     if (displayName.trim() !== user.displayName) patch.displayName = displayName.trim();
     if (email.trim() !== user.email) patch.email = email.trim();
-    const cleanAvatar = avatarUrl.trim() || null;
-    if (cleanAvatar !== (user.avatarUrl ?? null)) patch.avatarUrl = cleanAvatar;
     if (Object.keys(patch).length === 0) {
       Alert.alert('Info', 'Aucun changement à enregistrer');
       return;
     }
     updateProfile.mutate(patch);
+  }
+
+  const uploadAvatar = useMutation({
+    mutationFn: ({ uri, name, mimeType }: { uri: string; name: string; mimeType: string }) =>
+      authApi.uploadAvatar(uri, name, mimeType),
+    onSuccess: (updated) => {
+      const accessToken = useAuthStore.getState().accessToken;
+      const refreshToken = useAuthStore.getState().refreshToken;
+      if (accessToken && refreshToken) {
+        setSession(updated, accessToken, refreshToken);
+      }
+      Alert.alert('OK', 'Avatar mis à jour');
+    },
+    onError: (e: Error) => Alert.alert('Erreur', e.message),
+  });
+
+  async function pickAvatar() {
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) {
+      Alert.alert('Permission refusée');
+      return;
+    }
+    const res = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.7,
+      allowsEditing: true,
+      aspect: [1, 1],
+    });
+    if (res.canceled || !res.assets?.[0]) return;
+    const asset = res.assets[0];
+    uploadAvatar.mutate({
+      uri: asset.uri,
+      name: asset.fileName ?? `avatar-${Date.now()}.jpg`,
+      mimeType: asset.mimeType ?? 'image/jpeg',
+    });
   }
 
   function handleChangePassword() {
@@ -123,15 +153,31 @@ export default function SettingsScreen() {
           className="h-10 px-3 border border-slate-200 rounded bg-slate-50 mb-3"
         />
 
-        <Text className="text-xs text-slate-700 mb-1">URL de l'avatar</Text>
-        <TextInput
-          value={avatarUrl}
-          onChangeText={setAvatarUrl}
-          placeholder="https://..."
-          autoCapitalize="none"
-          autoCorrect={false}
-          className="h-10 px-3 border border-slate-200 rounded bg-slate-50 mb-3"
-        />
+        <Text className="text-xs text-slate-700 mb-1">Avatar</Text>
+        <View className="flex-row items-center gap-3 mb-3">
+          <View className="h-16 w-16 rounded-full bg-slate-100 border border-slate-200 overflow-hidden items-center justify-center">
+            {user.avatarUrl ? (
+              <Image
+                source={{ uri: user.avatarUrl }}
+                style={{ width: 64, height: 64 }}
+                resizeMode="cover"
+              />
+            ) : (
+              <Text className="text-[10px] text-slate-400">Aucun</Text>
+            )}
+          </View>
+          <Pressable
+            onPress={pickAvatar}
+            disabled={uploadAvatar.isPending}
+            className="flex-1 h-10 items-center justify-center bg-slate-100 rounded active:bg-slate-200 disabled:opacity-50"
+          >
+            {uploadAvatar.isPending ? (
+              <ActivityIndicator size="small" />
+            ) : (
+              <Text className="text-sm font-medium text-slate-700">Changer l&apos;image</Text>
+            )}
+          </Pressable>
+        </View>
 
         <Pressable
           onPress={handleSaveProfile}
@@ -187,24 +233,6 @@ export default function SettingsScreen() {
             <Text className="text-sm font-medium text-white">Changer le mot de passe</Text>
           )}
         </Pressable>
-      </View>
-
-      {/* Thème */}
-      <View className="border border-slate-200 rounded p-4 mb-4">
-        <Text className="text-xs font-semibold text-slate-500 uppercase mb-3">Apparence</Text>
-        <View className="flex-row items-center justify-between">
-          <Text className="text-sm text-slate-900">
-            Thème {theme === 'dark' ? 'sombre' : 'clair'}
-          </Text>
-          <Pressable
-            onPress={toggleTheme}
-            className="px-4 py-2 bg-slate-100 rounded active:bg-slate-200"
-          >
-            <Text className="text-sm font-medium text-slate-700">
-              Passer en {theme === 'dark' ? 'clair' : 'sombre'}
-            </Text>
-          </Pressable>
-        </View>
       </View>
     </ScrollView>
   );

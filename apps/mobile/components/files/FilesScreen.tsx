@@ -52,6 +52,7 @@ export function FilesScreen({ folderId }: Props) {
 
   function invalidate() {
     qc.invalidateQueries({ queryKey: ['folder', folderId] });
+    qc.invalidateQueries({ queryKey: ['mobile-stats'] });
   }
 
   const createFolder = useMutation({

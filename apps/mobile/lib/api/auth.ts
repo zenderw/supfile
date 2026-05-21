@@ -40,4 +40,16 @@ export const authApi = {
   async changePassword(input: { oldPassword: string; newPassword: string }) {
     await api.post('/auth/me/password', input);
   },
+  async uploadAvatar(uri: string, name: string, mimeType: string) {
+    const form = new FormData();
+    form.append('file', {
+      uri,
+      name,
+      type: mimeType,
+    } as unknown as Blob);
+    const { data } = await api.post<User>('/auth/me/avatar', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return data;
+  },
 };

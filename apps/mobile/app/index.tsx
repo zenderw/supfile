@@ -1,5 +1,7 @@
-import { useQuery } from '@tanstack/react-query';
+import { useFocusEffect } from '@react-navigation/native';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Redirect, router } from 'expo-router';
+import { useCallback } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { CategoryBars } from '@/components/CategoryBars';
@@ -16,12 +18,20 @@ function pct(used: string, quota: string): number {
 export default function HomeScreen() {
   const user = useAuthStore((s) => s.user);
   const clear = useAuthStore((s) => s.clear);
+  const qc = useQueryClient();
 
   const stats = useQuery({
     queryKey: ['mobile-stats'],
     queryFn: () => statsApi.me(),
     enabled: !!user,
   });
+
+  // Recharge les stats à chaque retour sur l'accueil (ex: après upload, partage, etc.)
+  useFocusEffect(
+    useCallback(() => {
+      qc.invalidateQueries({ queryKey: ['mobile-stats'] });
+    }, [qc]),
+  );
 
   if (!user) return <Redirect href="/login" />;
 
