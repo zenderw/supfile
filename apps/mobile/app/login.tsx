@@ -9,7 +9,6 @@ import { GoogleButton } from '@/components/GoogleButton';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { authApi } from '@/lib/api/auth';
 import { extractErrorMessage } from '@/lib/api-error';
-import { startGoogleOAuth } from '@/lib/oauth';
 import { type LoginInput, loginSchema } from '@/lib/validators/auth';
 import { useAuthStore } from '@/stores/auth.store';
 
@@ -32,15 +31,8 @@ export default function LoginScreen() {
     },
   });
 
-  async function handleGoogle() {
-    try {
-      const { idToken } = await startGoogleOAuth();
-      const data = await authApi.loginWithGoogleIdToken(idToken);
-      setSession(data.user, data.accessToken, data.refreshToken);
-      router.replace('/');
-    } catch (err) {
-      Alert.alert('Connexion Google impossible', extractErrorMessage(err));
-    }
+  function handleGoogle() {
+    router.push('/google-auth');
   }
 
   return (

@@ -21,10 +21,12 @@ export async function startGoogleOAuth(): Promise<GoogleAuthResult> {
     );
   }
 
-  const redirectUri = AuthSession.makeRedirectUri({
-    scheme: 'supfile',
-    path: 'oauth-callback',
-  });
+  // Avec Expo Go on passe par le proxy auth.expo.io (Google iOS native ne marche pas dans Expo Go)
+  // En build natif, on utilise le scheme supfile://
+  const isExpoGo = !process.env.EXPO_PUBLIC_NATIVE_BUILD;
+  const redirectUri = isExpoGo
+    ? 'https://auth.expo.io/@wayl-zender/supfile'
+    : AuthSession.makeRedirectUri({ scheme: 'supfile', path: 'oauth-callback' });
 
   const request = new AuthSession.AuthRequest({
     clientId: GOOGLE_CLIENT_ID,
