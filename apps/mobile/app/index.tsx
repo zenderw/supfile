@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Redirect, router } from 'expo-router';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 
+import { CategoryBars } from '@/components/CategoryBars';
 import { formatBytes, statsApi } from '@/lib/api/files';
 import { useAuthStore } from '@/stores/auth.store';
 
@@ -67,6 +68,19 @@ export default function HomeScreen() {
         </View>
       )}
 
+      {/* repartition par categorie */}
+      {stats.data && (
+        <View className="mt-6 border border-slate-200 rounded p-4">
+          <Text className="text-xs font-semibold text-slate-500 uppercase mb-3">
+            Répartition de l'espace
+          </Text>
+          <CategoryBars
+            sizeByCategory={stats.data.sizeByCategory}
+            onPress={(cat) => router.push(`/search?category=${cat}`)}
+          />
+        </View>
+      )}
+
       <View className="mt-6 gap-3">
         <Pressable
           onPress={() => router.push('/files')}
@@ -85,6 +99,12 @@ export default function HomeScreen() {
           className="h-12 items-center justify-center bg-slate-100 rounded"
         >
           <Text className="text-slate-900 text-base font-medium">🗑 Corbeille</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => router.push('/settings')}
+          className="h-12 items-center justify-center bg-slate-100 rounded"
+        >
+          <Text className="text-slate-900 text-base font-medium">⚙ Paramètres</Text>
         </Pressable>
       </View>
 
