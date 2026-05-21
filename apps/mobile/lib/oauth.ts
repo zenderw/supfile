@@ -9,9 +9,16 @@ export interface GoogleAuthResult {
   idToken: string;
 }
 
+const discovery: AuthSession.DiscoveryDocument = {
+  authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
+  tokenEndpoint: 'https://oauth2.googleapis.com/token',
+};
+
 export async function startGoogleOAuth(): Promise<GoogleAuthResult> {
   if (!GOOGLE_CLIENT_ID) {
-    throw new Error('EXPO_PUBLIC_GOOGLE_CLIENT_ID manquant');
+    throw new Error(
+      'EXPO_PUBLIC_GOOGLE_CLIENT_ID manquant. Renseignez-le dans le .env à la racine.',
+    );
   }
 
   const redirectUri = AuthSession.makeRedirectUri({
@@ -19,17 +26,12 @@ export async function startGoogleOAuth(): Promise<GoogleAuthResult> {
     path: 'oauth-callback',
   });
 
-  const discovery = {
-    authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
-    tokenEndpoint: 'https://oauth2.googleapis.com/token',
-  };
-
   const request = new AuthSession.AuthRequest({
     clientId: GOOGLE_CLIENT_ID,
     scopes: ['openid', 'profile', 'email'],
     redirectUri,
-    responseType: AuthSession.ResponseType.IdToken,
-    extraParams: { nonce: Math.random().toString(36).slice(2) },
+    responseType: AuthSession.ResponseType.Code,
+    usePKCE: true,
   });
 
   const result = await request.promptAsync(discovery);
@@ -38,9 +40,26 @@ export async function startGoogleOAuth(): Promise<GoogleAuthResult> {
     throw new Error(result.type === 'cancel' ? 'Connexion annulée' : 'Connexion échouée');
   }
 
-  const idToken = result.params.id_token;
+  const code = result.params.code;
+  if (!code) {
+    throw new Error("Code d'autorisation Google manquant");
+  }
+
+  const tokenResponse = await AuthSession.exchangeCodeAsync(
+    {
+      clientId: GOOGLE_CLIENT_ID,
+      code,
+      redirectUri,
+      extraParams: {
+        code_verifier: request.codeVerifier ?? '',
+      },
+    },
+    discovery,
+  );
+
+  const idToken = tokenResponse.idToken;
   if (!idToken) {
-    throw new Error('Token Google manquant dans la réponse');
+    throw new Error('id_token absent de la réponse Google');
   }
 
   return { idToken };
