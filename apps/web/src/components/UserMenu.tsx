@@ -26,7 +26,15 @@ export function UserMenu() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="sm" className="gap-2">
-          <UserIcon className="h-4 w-4" />
+          {user.avatarUrl ? (
+            <img
+              src={user.avatarUrl}
+              alt={user.displayName}
+              className="h-5 w-5 rounded-full object-cover"
+            />
+          ) : (
+            <UserIcon className="h-4 w-4" />
+          )}
           {user.displayName}
         </Button>
       </DropdownMenuTrigger>

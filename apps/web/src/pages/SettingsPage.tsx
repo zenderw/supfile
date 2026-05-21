@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { LogOut, Save } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { LogOut, Save, Upload } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -27,16 +27,15 @@ export function SettingsPage() {
 
   const [displayName, setDisplayName] = useState(user?.displayName ?? '');
   const [email, setEmail] = useState(user?.email ?? '');
-  const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl ?? '');
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [newPassword2, setNewPassword2] = useState('');
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (user) {
       setDisplayName(user.displayName);
       setEmail(user.email);
-      setAvatarUrl(user.avatarUrl ?? '');
     }
   }, [user]);
 
@@ -65,14 +64,36 @@ export function SettingsPage() {
     onError: (err) => toast.error(extractErrorMessage(err)),
   });
 
+  const uploadAvatar = useMutation({
+    mutationFn: authApi.uploadAvatar,
+    onSuccess: (updated) => {
+      const accessToken = useAuthStore.getState().accessToken;
+      const refreshToken = useAuthStore.getState().refreshToken;
+      if (accessToken && refreshToken) {
+        setSession(updated, accessToken, refreshToken);
+      }
+      toast.success('Avatar mis à jour');
+    },
+    onError: (err) => toast.error(extractErrorMessage(err)),
+  });
+
+  function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Image trop volumineuse (max 2 Mo)');
+      return;
+    }
+    uploadAvatar.mutate(file);
+    e.target.value = '';
+  }
+
   function handleSaveProfile(e: React.FormEvent) {
     e.preventDefault();
     if (!user) return;
-    const patch: { email?: string; displayName?: string; avatarUrl?: string | null } = {};
+    const patch: { email?: string; displayName?: string } = {};
     if (displayName.trim() !== user.displayName) patch.displayName = displayName.trim();
     if (email.trim() !== user.email) patch.email = email.trim();
-    const cleanAvatar = avatarUrl.trim() || null;
-    if (cleanAvatar !== (user.avatarUrl ?? null)) patch.avatarUrl = cleanAvatar;
     if (Object.keys(patch).length === 0) {
       toast.info('Aucun changement à enregistrer');
       return;
@@ -132,18 +153,38 @@ export function SettingsPage() {
           />
         </div>
 
-        <div className="space-y-1">
-          <Label htmlFor="avatarUrl">URL de l'avatar</Label>
-          <Input
-            id="avatarUrl"
-            type="url"
-            placeholder="https://..."
-            value={avatarUrl}
-            onChange={(e) => setAvatarUrl(e.target.value)}
-          />
-          <p className="text-xs text-muted-foreground">
-            Lien vers une image (PNG, JPG). Laisser vide pour aucun avatar.
-          </p>
+        <div className="space-y-2">
+          <Label>Avatar</Label>
+          <div className="flex items-center gap-4">
+            <div className="h-16 w-16 rounded-full border bg-muted overflow-hidden flex items-center justify-center text-muted-foreground text-xs">
+              {user.avatarUrl ? (
+                <img
+                  src={user.avatarUrl}
+                  alt={user.displayName}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                'Aucun'
+              )}
+            </div>
+            <input
+              ref={avatarInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/gif"
+              onChange={handleAvatarChange}
+              className="hidden"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => avatarInputRef.current?.click()}
+              disabled={uploadAvatar.isPending}
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              {uploadAvatar.isPending ? 'Envoi...' : "Changer l'image"}
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">JPG, PNG, WEBP ou GIF (max 2 Mo)</p>
         </div>
 
         <Button type="submit" disabled={updateProfile.isPending}>

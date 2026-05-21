@@ -34,4 +34,12 @@ export const authApi = {
   async changePassword(input: { oldPassword: string; newPassword: string }) {
     await api.post('/auth/me/password', input);
   },
+  async uploadAvatar(file: File) {
+    const form = new FormData();
+    form.append('file', file);
+    const { data } = await api.post<User>('/auth/me/avatar', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return data;
+  },
 };
