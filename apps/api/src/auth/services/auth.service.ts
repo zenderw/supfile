@@ -1,6 +1,9 @@
+import { Readable } from 'node:stream';
+
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -10,6 +13,7 @@ import { OAuth2Client } from 'google-auth-library';
 
 import { EnvConfig } from '../../config/env.config';
 import { PrismaService } from '../../prisma/prisma.service';
+import { STORAGE_SERVICE, StorageService } from '../../storage/storage.interface';
 import { LoginDto } from '../dto/login.dto';
 import { RegisterDto } from '../dto/register.dto';
 import type { GoogleProfileLite } from '../strategies/google.strategy';
@@ -30,6 +34,7 @@ export class AuthService {
     private readonly hash: HashService,
     private readonly tokens: TokenService,
     private readonly env: EnvConfig,
+    @Inject(STORAGE_SERVICE) private readonly storage: StorageService,
   ) {}
 
   async register(dto: RegisterDto): Promise<AuthResult> {
@@ -232,6 +237,61 @@ export class AuthService {
     return this.toShared(updated);
   }
 
+  async uploadAvatar(
+    userId: string,
+    file: { buffer: Buffer; mimetype: string },
+    publicBaseUrl: string,
+  ): Promise<UserShared> {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new UnauthorizedException();
+
+    // sauve via le storage service (sous-dossier <userId>/<uuid>)
+    const stream = Readable.from(file.buffer);
+    const { storagePath } = await this.storage.save(userId, stream);
+
+    // supprime l'ancien avatar si stocké chez nous (URL relative qu'on a générée)
+    if (user.avatarUrl && user.avatarUrl.includes('/auth/avatars/')) {
+      const oldPath = user.avatarUrl.split('/auth/avatars/')[1];
+      if (oldPath) {
+        await this.storage.delete(decodeURIComponent(oldPath)).catch(() => undefined);
+      }
+    }
+
+    // URL publique stockée dans avatarUrl, servie par GET /auth/avatars/:storagePath
+    const avatarUrl = `${publicBaseUrl}/auth/avatars/${encodeURIComponent(storagePath)}`;
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data: { avatarUrl },
+    });
+
+    return this.toShared(updated);
+  }
+
+  async readAvatarStream(storagePath: string): Promise<{ stream: Readable; mimeType: string }> {
+    // Sécurité : on ne sert que les fichiers explicitement enregistrés comme avatar dans la BDD
+    const owner = await this.prisma.user.findFirst({
+      where: { avatarUrl: { contains: `/auth/avatars/${encodeURIComponent(storagePath)}` } },
+      select: { id: true },
+    });
+    if (!owner) {
+      throw new UnauthorizedException();
+    }
+    // sniffer magic bytes pour deviner le mime de l'image
+    const sniffStream = await this.storage.read(storagePath);
+    const chunks: Buffer[] = [];
+    let totalLen = 0;
+    for await (const chunk of sniffStream) {
+      chunks.push(chunk as Buffer);
+      totalLen += (chunk as Buffer).length;
+      if (totalLen >= 16) break;
+    }
+    sniffStream.destroy();
+    const head = Buffer.concat(chunks).subarray(0, 16);
+    const mimeType = detectImageMime(head);
+    const stream = await this.storage.read(storagePath);
+    return { stream, mimeType };
+  }
+
   async changePassword(userId: string, oldPassword: string, newPassword: string): Promise<void> {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
@@ -276,4 +336,36 @@ export class AuthService {
       updatedAt: user.updatedAt.toISOString(),
     };
   }
+}
+
+function detectImageMime(head: Buffer): string {
+  if (head.length >= 3 && head[0] === 0xff && head[1] === 0xd8 && head[2] === 0xff) {
+    return 'image/jpeg';
+  }
+  if (
+    head.length >= 8 &&
+    head[0] === 0x89 &&
+    head[1] === 0x50 &&
+    head[2] === 0x4e &&
+    head[3] === 0x47
+  ) {
+    return 'image/png';
+  }
+  if (head.length >= 3 && head[0] === 0x47 && head[1] === 0x49 && head[2] === 0x46) {
+    return 'image/gif';
+  }
+  if (
+    head.length >= 12 &&
+    head[0] === 0x52 &&
+    head[1] === 0x49 &&
+    head[2] === 0x46 &&
+    head[3] === 0x46 &&
+    head[8] === 0x57 &&
+    head[9] === 0x45 &&
+    head[10] === 0x42 &&
+    head[11] === 0x50
+  ) {
+    return 'image/webp';
+  }
+  return 'application/octet-stream';
 }
