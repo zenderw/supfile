@@ -75,6 +75,32 @@ export function useRenameFile(parentId: string | null) {
   });
 }
 
+export function useMoveFile() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, folderId }: { id: string; folderId: string | null }) =>
+      filesApi.update(id, { folderId }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: folderKeys.all });
+      toast.success('Fichier déplacé');
+    },
+    onError: (err) => toast.error(extractErrorMessage(err)),
+  });
+}
+
+export function useMoveFolder() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, parentId }: { id: string; parentId: string | null }) =>
+      foldersApi.update(id, { parentId }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: folderKeys.all });
+      toast.success('Dossier déplacé');
+    },
+    onError: (err) => toast.error(extractErrorMessage(err)),
+  });
+}
+
 export function useDeleteFolder(parentId: string | null) {
   const qc = useQueryClient();
   return useMutation({

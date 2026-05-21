@@ -9,6 +9,7 @@ import {
   Trash2,
   Users,
 } from 'lucide-react';
+import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -17,6 +18,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { cn } from '@/lib/utils';
+
+export const DND_MIME = 'application/x-supfile-item';
+
+export interface DnDPayload {
+  id: string;
+  type: 'folder' | 'file';
+  name: string;
+}
 
 interface CommonProps {
   id: string;
@@ -25,6 +35,9 @@ interface CommonProps {
   sizeLabel?: string;
   sharedBadge?: string;
   readOnly?: boolean;
+  draggable?: boolean;
+  acceptsDrop?: boolean;
+  onDropItem?: (payload: DnDPayload) => void;
   onOpen?: () => void;
   onPreview?: () => void;
   onShare?: () => void;
@@ -35,11 +48,15 @@ interface CommonProps {
 }
 
 export function FileRow({
+  id,
   name,
   type,
   sizeLabel,
   sharedBadge,
   readOnly,
+  draggable,
+  acceptsDrop,
+  onDropItem,
   onOpen,
   onPreview,
   onShare,
@@ -50,9 +67,57 @@ export function FileRow({
 }: CommonProps) {
   const Icon = type === 'folder' ? Folder : FileIcon;
   const hasActions = onPreview || onDownload || onShare || onShareWithUser || onRename || onDelete;
+  const [isDropTarget, setIsDropTarget] = useState(false);
+
+  function handleDragStart(e: React.DragEvent<HTMLDivElement>) {
+    if (!draggable || readOnly) return;
+    const payload: DnDPayload = { id, type, name };
+    e.dataTransfer.setData(DND_MIME, JSON.stringify(payload));
+    e.dataTransfer.effectAllowed = 'move';
+  }
+
+  function handleDragOver(e: React.DragEvent<HTMLDivElement>) {
+    if (!acceptsDrop || !onDropItem) return;
+    if (!e.dataTransfer.types.includes(DND_MIME)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = 'move';
+    setIsDropTarget(true);
+  }
+
+  function handleDragLeave() {
+    setIsDropTarget(false);
+  }
+
+  function handleDrop(e: React.DragEvent<HTMLDivElement>) {
+    if (!acceptsDrop || !onDropItem) return;
+    const raw = e.dataTransfer.getData(DND_MIME);
+    if (!raw) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDropTarget(false);
+    try {
+      const payload = JSON.parse(raw) as DnDPayload;
+      if (payload.id === id) return;
+      onDropItem(payload);
+    } catch {
+      // ignore parse error
+    }
+  }
 
   return (
-    <div className="flex items-center justify-between p-3 hover:bg-muted/40 rounded-md group">
+    <div
+      draggable={draggable && !readOnly}
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+      className={cn(
+        'flex items-center justify-between p-3 hover:bg-muted/40 rounded-md group',
+        draggable && !readOnly && 'cursor-grab active:cursor-grabbing',
+        isDropTarget && 'ring-2 ring-primary bg-primary/5',
+      )}
+    >
       <button type="button" onClick={onOpen} className="flex items-center gap-3 flex-1 text-left">
         <Icon className="h-5 w-5 text-muted-foreground" />
         <span className="text-sm font-medium">{name}</span>
