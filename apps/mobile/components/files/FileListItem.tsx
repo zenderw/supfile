@@ -6,11 +6,12 @@ interface Props {
   type: 'folder' | 'file';
   name: string;
   size?: string;
+  badge?: string;
   onPress?: () => void;
   onLongPress?: () => void;
 }
 
-export function FileListItem({ type, name, size, onPress, onLongPress }: Props) {
+export function FileListItem({ type, name, size, badge, onPress, onLongPress }: Props) {
   return (
     <Pressable
       onPress={onPress}
@@ -25,6 +26,11 @@ export function FileListItem({ type, name, size, onPress, onLongPress }: Props) 
         <Text className="text-sm font-medium text-slate-900" numberOfLines={1}>
           {name}
         </Text>
+        {badge && (
+          <Text className="text-[10px] uppercase text-blue-600 mt-0.5" numberOfLines={1}>
+            {badge}
+          </Text>
+        )}
         {size && <Text className="text-xs text-slate-400 mt-0.5">{formatBytes(size)}</Text>}
       </View>
       <Text className="text-slate-300 text-lg px-2">›</Text>

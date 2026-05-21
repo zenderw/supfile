@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
+import * as Linking from 'expo-linking';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import {
@@ -10,7 +11,6 @@ import {
   Pressable,
   RefreshControl,
   ScrollView,
-  Share,
   Text,
   View,
 } from 'react-native';
@@ -19,8 +19,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ActionsSheet } from './ActionsSheet';
 import { FileListItem } from './FileListItem';
 import { RenamePrompt } from './RenamePrompt';
+import { ShareFolderModal } from './ShareFolderModal';
+import { SharePublicLinkModal } from './SharePublicLinkModal';
 
-import { filesApi, foldersApi, shareApi, FileItem, FolderItem } from '@/lib/api/files';
+import { filesApi, foldersApi, FileItem, FolderItem } from '@/lib/api/files';
 
 interface Props {
   folderId: string | null;
@@ -34,6 +36,8 @@ export function FilesScreen({ folderId }: Props) {
   const [menu, setMenu] = useState<MenuTarget>(null);
   const [renaming, setRenaming] = useState<MenuTarget>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [shareFolder, setShareFolder] = useState<{ id: string; name: string } | null>(null);
+  const [shareFile, setShareFile] = useState<{ id: string; name: string } | null>(null);
 
   const listing = useQuery({
     queryKey: ['folder', folderId],
@@ -85,13 +89,12 @@ export function FilesScreen({ folderId }: Props) {
     onSuccess: invalidate,
   });
 
-  async function shareFile(fileId: string) {
+  async function downloadFolderZip(id: string) {
     try {
-      const link = await shareApi.create(fileId, {});
-      const url = shareApi.buildShareUrl(link.token);
-      await Share.share({ message: url, url });
+      const url = await filesApi.getFolderZipUrl(id);
+      await Linking.openURL(url);
     } catch (e) {
-      Alert.alert('Erreur', e instanceof Error ? e.message : 'Echec partage');
+      Alert.alert('Erreur', e instanceof Error ? e.message : 'Echec du téléchargement');
     }
   }
 
@@ -248,21 +251,27 @@ export function FilesScreen({ folderId }: Props) {
           ListEmptyComponent={
             <Text className="text-center text-slate-400 mt-10">Dossier vide</Text>
           }
-          renderItem={({ item }) => (
-            <FileListItem
-              type={item.kind}
-              name={item.item.name}
-              size={item.kind === 'file' ? item.item.size : undefined}
-              onPress={() => {
-                if (item.kind === 'folder') {
-                  router.push(`/files/${item.item.id}`);
-                } else {
-                  router.push(`/preview/${item.item.id}`);
-                }
-              }}
-              onLongPress={() => setMenu(item)}
-            />
-          )}
+          renderItem={({ item }) => {
+            const isSharedFolder =
+              item.kind === 'folder' && (item.item as FolderItem).shared === true;
+            const sharedBy = isSharedFolder ? (item.item as FolderItem).sharedBy : undefined;
+            return (
+              <FileListItem
+                type={item.kind}
+                name={item.item.name}
+                size={item.kind === 'file' ? item.item.size : undefined}
+                badge={sharedBy ? `Partagé par ${sharedBy.displayName}` : undefined}
+                onPress={() => {
+                  if (item.kind === 'folder') {
+                    router.push(`/files/${item.item.id}`);
+                  } else {
+                    router.push(`/preview/${item.item.id}`);
+                  }
+                }}
+                onLongPress={() => setMenu(item)}
+              />
+            );
+          }}
         />
       )}
 
@@ -273,32 +282,48 @@ export function FilesScreen({ folderId }: Props) {
         title={menu?.item.name ?? ''}
         actions={
           menu
-            ? [
-                ...(menu.kind === 'file'
-                  ? [
-                      {
-                        label: 'Aperçu',
-                        onPress: () => router.push(`/preview/${menu.item.id}`),
-                      },
-                      {
-                        label: 'Partager',
-                        onPress: () => shareFile(menu.item.id),
-                      },
-                    ]
-                  : []),
-                { label: 'Renommer', onPress: () => setRenaming(menu) },
-                {
-                  label: 'Supprimer',
-                  destructive: true,
-                  onPress: () => {
-                    if (menu.kind === 'folder') {
-                      deleteFolder.mutate(menu.item.id);
-                    } else {
-                      deleteFile.mutate(menu.item.id);
-                    }
-                  },
-                },
-              ]
+            ? (() => {
+                const isSharedFolder =
+                  menu.kind === 'folder' && (menu.item as FolderItem).shared === true;
+                const actions: { label: string; onPress: () => void; destructive?: boolean }[] = [];
+                if (menu.kind === 'file') {
+                  actions.push({
+                    label: 'Aperçu',
+                    onPress: () => router.push(`/preview/${menu.item.id}`),
+                  });
+                  actions.push({
+                    label: 'Partager (lien public)',
+                    onPress: () => setShareFile({ id: menu.item.id, name: menu.item.name }),
+                  });
+                }
+                if (menu.kind === 'folder') {
+                  actions.push({
+                    label: 'Télécharger en ZIP',
+                    onPress: () => downloadFolderZip(menu.item.id),
+                  });
+                }
+                if (menu.kind === 'folder' && !isSharedFolder) {
+                  actions.push({
+                    label: 'Partager avec un utilisateur',
+                    onPress: () => setShareFolder({ id: menu.item.id, name: menu.item.name }),
+                  });
+                }
+                if (!isSharedFolder) {
+                  actions.push({ label: 'Renommer', onPress: () => setRenaming(menu) });
+                  actions.push({
+                    label: 'Supprimer',
+                    destructive: true,
+                    onPress: () => {
+                      if (menu.kind === 'folder') {
+                        deleteFolder.mutate(menu.item.id);
+                      } else {
+                        deleteFile.mutate(menu.item.id);
+                      }
+                    },
+                  });
+                }
+                return actions;
+              })()
             : []
         }
       />
@@ -326,6 +351,22 @@ export function FilesScreen({ folderId }: Props) {
         title="Nouveau dossier"
         onCancel={() => setCreateOpen(false)}
         onSubmit={(name) => createFolder.mutate(name)}
+      />
+
+      {/* partage interne dossier */}
+      <ShareFolderModal
+        visible={!!shareFolder}
+        folderId={shareFolder?.id ?? null}
+        folderName={shareFolder?.name ?? ''}
+        onClose={() => setShareFolder(null)}
+      />
+
+      {/* partage public lien (fichier) */}
+      <SharePublicLinkModal
+        visible={!!shareFile}
+        fileId={shareFile?.id ?? null}
+        fileName={shareFile?.name ?? ''}
+        onClose={() => setShareFile(null)}
       />
     </View>
   );
