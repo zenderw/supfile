@@ -6,6 +6,8 @@ export interface FolderItem {
   parentId: string | null;
   createdAt: string;
   updatedAt: string;
+  shared?: boolean;
+  sharedBy?: { id: string; displayName: string; email: string };
 }
 
 export interface FileItem {
@@ -84,6 +86,50 @@ export const filesApi = {
   async remove(id: string): Promise<void> {
     await api.delete(`/files/${id}`);
   },
+  async getFolderZipUrl(folderId: string): Promise<string> {
+    const { data } = await api.get<{ token: string }>(`/files/folders/${folderId}/download-token`);
+    const base = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000/api/v1';
+    return `${base}/files/folders/${folderId}/download?token=${encodeURIComponent(data.token)}`;
+  },
+};
+
+export interface InternalShareUser {
+  id: string;
+  email: string;
+  displayName: string;
+}
+
+export interface FolderShareForOwner {
+  id: string;
+  createdAt: string;
+  toUser: InternalShareUser;
+}
+
+export interface IncomingFolderShare {
+  id: string;
+  createdAt: string;
+  folder: { id: string; name: string; updatedAt: string };
+  fromUser: InternalShareUser;
+}
+
+export const folderShareApi = {
+  async listForFolder(folderId: string): Promise<FolderShareForOwner[]> {
+    const { data } = await api.get<FolderShareForOwner[]>(`/share/folders/${folderId}/users`);
+    return data;
+  },
+  async share(folderId: string, email: string): Promise<FolderShareForOwner> {
+    const { data } = await api.post<FolderShareForOwner>(`/share/folders/${folderId}/users`, {
+      email,
+    });
+    return data;
+  },
+  async revoke(folderId: string, userId: string): Promise<void> {
+    await api.delete(`/share/folders/${folderId}/users/${userId}`);
+  },
+  async listIncoming(): Promise<IncomingFolderShare[]> {
+    const { data } = await api.get<IncomingFolderShare[]>('/share/folders/incoming');
+    return data;
+  },
 };
 
 export interface ShareLinkDto {
@@ -150,11 +196,24 @@ export interface SearchResultDto {
   query: string;
 }
 
+export type SearchCategory = 'all' | 'image' | 'video' | 'audio' | 'pdf' | 'document' | 'other';
+
+export interface SearchOptions {
+  type?: 'all' | 'folder' | 'file';
+  category?: SearchCategory;
+  from?: string;
+  to?: string;
+}
+
 export const searchApi = {
-  async run(q: string, type: 'all' | 'folder' | 'file' = 'all'): Promise<SearchResultDto> {
-    const { data } = await api.get<SearchResultDto>('/search', {
-      params: { q, type },
-    });
+  async run(q: string, options: SearchOptions = {}): Promise<SearchResultDto> {
+    const params: Record<string, string> = {};
+    if (q) params.q = q;
+    if (options.type && options.type !== 'all') params.type = options.type;
+    if (options.category && options.category !== 'all') params.category = options.category;
+    if (options.from) params.from = options.from;
+    if (options.to) params.to = options.to;
+    const { data } = await api.get<SearchResultDto>('/search', { params });
     return data;
   },
 };
@@ -162,6 +221,7 @@ export const searchApi = {
 export interface DashboardStatsDto {
   usedSpace: string;
   quota: string;
+  plan?: 'FREE' | 'PRO' | 'BUSINESS';
   totalFolders: number;
   totalFiles: number;
   recentFiles: Array<{
@@ -179,6 +239,14 @@ export interface DashboardStatsDto {
     pdf: number;
     document: number;
     other: number;
+  };
+  sizeByCategory: {
+    image: string;
+    video: string;
+    audio: string;
+    pdf: string;
+    document: string;
+    other: string;
   };
 }
 
