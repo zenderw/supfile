@@ -1,0 +1,26 @@
+graph LR
+    Utilisateur((Utilisateur))
+
+    subgraph GestionFichiers[Gestion de fichiers]
+        UC_Upload[Uploader un fichier]
+        UC_UploadDnD[Upload par glisser-déposer]
+        UC_CreateFolder[Créer un dossier]
+        UC_Navigate[Naviguer dans l'arborescence]
+        UC_Rename[Renommer fichier ou dossier]
+        UC_Move[Déplacer fichier ou dossier]
+        UC_MoveDnD[Déplacer par glisser-déposer]
+        UC_Delete[Supprimer fichier ou dossier]
+        UC_Download[Télécharger un fichier]
+        UC_DownloadZip[Télécharger dossier en ZIP]
+    end
+
+    Utilisateur --> UC_Upload
+    UC_Upload -.extend.-> UC_UploadDnD
+    Utilisateur --> UC_CreateFolder
+    Utilisateur --> UC_Navigate
+    Utilisateur --> UC_Rename
+    Utilisateur --> UC_Move
+    UC_Move -.extend.-> UC_MoveDnD
+    Utilisateur --> UC_Delete
+    Utilisateur --> UC_Download
+    Utilisateur --> UC_DownloadZip

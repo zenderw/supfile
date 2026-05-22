@@ -1,0 +1,27 @@
+graph LR
+    Visiteur((Visiteur))
+    Utilisateur((Utilisateur))
+
+    subgraph PartagePublic[Partage public - création]
+        UC_CreateShare[Créer un lien de partage]
+        UC_SharePwd[Ajouter mot de passe]
+        UC_ShareExp[Définir expiration]
+        UC_ListShares[Lister mes liens]
+        UC_Revoke[Révoquer un lien]
+    end
+
+    subgraph AccesPublic[Accès au lien public]
+        UC_OpenLink[Ouvrir un lien public]
+        UC_VerifyPwd[Saisir mot de passe du lien]
+        UC_DownloadPublic[Télécharger via lien]
+    end
+
+    Utilisateur --> UC_CreateShare
+    UC_CreateShare -.extend.-> UC_SharePwd
+    UC_CreateShare -.extend.-> UC_ShareExp
+    Utilisateur --> UC_ListShares
+    Utilisateur --> UC_Revoke
+
+    Visiteur --> UC_OpenLink
+    UC_OpenLink -.include.-> UC_VerifyPwd
+    UC_OpenLink --> UC_DownloadPublic

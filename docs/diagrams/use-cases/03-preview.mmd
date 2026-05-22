@@ -1,0 +1,18 @@
+graph LR
+    Utilisateur((Utilisateur))
+
+    subgraph Previsualisation[Prévisualisation]
+        UC_Preview[Prévisualiser un fichier]
+        UC_PreviewImage[Voir image]
+        UC_PreviewPdf[Voir PDF]
+        UC_PreviewText[Voir texte/markdown]
+        UC_StreamVideo[Streamer vidéo]
+        UC_StreamAudio[Streamer audio]
+    end
+
+    Utilisateur --> UC_Preview
+    UC_Preview -.extend.-> UC_PreviewImage
+    UC_Preview -.extend.-> UC_PreviewPdf
+    UC_Preview -.extend.-> UC_PreviewText
+    UC_Preview -.extend.-> UC_StreamVideo
+    UC_Preview -.extend.-> UC_StreamAudio

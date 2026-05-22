@@ -1,0 +1,20 @@
+graph LR
+    Utilisateur((Utilisateur))
+
+    subgraph Abonnement[Abonnement freemium]
+        UC_ViewPlans[Consulter les plans]
+        UC_ViewMyPlan[Voir mon plan actuel]
+        UC_Upgrade[Passer à un plan supérieur]
+        UC_Downgrade[Redescendre à un plan inférieur]
+        UC_EditProfile[Modifier profil - nom/email/avatar]
+        UC_ChangePwd[Changer mot de passe]
+        UC_Theme[Basculer thème clair/sombre]
+    end
+
+    Utilisateur --> UC_ViewPlans
+    Utilisateur --> UC_ViewMyPlan
+    Utilisateur --> UC_Upgrade
+    Utilisateur --> UC_Downgrade
+    Utilisateur --> UC_EditProfile
+    Utilisateur --> UC_ChangePwd
+    Utilisateur --> UC_Theme

@@ -1,0 +1,14 @@
+graph LR
+    Utilisateur((Utilisateur))
+
+    subgraph Corbeille
+        UC_ListTrash[Consulter la corbeille]
+        UC_Restore[Restaurer un élément]
+        UC_Purge[Purger définitivement]
+        UC_DnDTrash[Glisser sur la corbeille pour supprimer]
+    end
+
+    Utilisateur --> UC_ListTrash
+    UC_ListTrash -.extend.-> UC_Restore
+    UC_ListTrash -.extend.-> UC_Purge
+    Utilisateur --> UC_DnDTrash
