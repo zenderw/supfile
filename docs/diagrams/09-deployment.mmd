@@ -1,0 +1,33 @@
+graph TB
+    subgraph PosteUser[Poste utilisateur]
+        Browser[Navigateur Chrome/Firefox]
+        Mobile[App SUPFile<br/>Android ou iOS]
+    end
+
+    subgraph DockerHost[Serveur Docker]
+        subgraph Network[Réseau interne supfile_default]
+            Nginx["Container supfile-web<br/>nginx:alpine<br/>port hôte 80"]
+            NestJS["Container supfile-api<br/>node:20-alpine<br/>port hôte 3000"]
+            Postgres["Container supfile-postgres<br/>postgres:16-alpine<br/>port interne 5432"]
+        end
+
+        VolDB[(Volume<br/>supfile_pg_data<br/>/var/lib/postgresql/data)]
+        VolStore[(Volume<br/>supfile_storage<br/>/data)]
+    end
+
+    Browser -->|HTTP :80| Nginx
+    Mobile -->|HTTPS :3000| NestJS
+    Nginx -->|fichiers statiques| Browser
+    Browser -.->|/api/v1/* :3000| NestJS
+
+    NestJS -->|TCP :5432| Postgres
+    Postgres --> VolDB
+    NestJS -->|read/write fichiers| VolStore
+
+    classDef container fill:#e1f5ff,stroke:#0288d1,stroke-width:2px
+    classDef volume fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    classDef client fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+
+    class Nginx,NestJS,Postgres container
+    class VolDB,VolStore volume
+    class Browser,Mobile client

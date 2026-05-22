@@ -1,0 +1,88 @@
+graph TB
+    Visiteur((Visiteur))
+    Utilisateur((Utilisateur))
+
+    Utilisateur -.hérite de.-> Visiteur
+
+    subgraph Authentification
+        UC_Register[S'inscrire email/mdp]
+        UC_LoginStd[Se connecter email/mdp]
+        UC_LoginOAuth[Se connecter via Google]
+        UC_Logout[Se déconnecter]
+        UC_Refresh[Rafraîchir la session]
+    end
+
+    subgraph PartagePublic[Acces public]
+        UC_OpenLink[Ouvrir un lien public]
+        UC_VerifyPwd[Saisir mot de passe du lien]
+        UC_DownloadPublic[Télécharger via lien]
+    end
+
+    subgraph GestionFichiers[Gestion de fichiers]
+        UC_Upload[Uploader un fichier]
+        UC_CreateFolder[Créer un dossier]
+        UC_Navigate[Naviguer dans l'arborescence]
+        UC_Rename[Renommer fichier ou dossier]
+        UC_Delete[Supprimer fichier ou dossier]
+        UC_Download[Télécharger un fichier]
+        UC_DownloadZip[Télécharger dossier ZIP]
+    end
+
+    subgraph Previsualisation[Prévisualisation]
+        UC_Preview[Prévisualiser un fichier]
+        UC_StreamVideo[Streamer vidéo/audio]
+    end
+
+    subgraph Partage
+        UC_CreateShare[Créer un lien de partage]
+        UC_SharePwd[Ajouter mot de passe au lien]
+        UC_ShareExp[Définir expiration du lien]
+        UC_Revoke[Révoquer un lien]
+        UC_ListShares[Lister mes liens]
+    end
+
+    subgraph Corbeille
+        UC_ListTrash[Consulter la corbeille]
+        UC_Restore[Restaurer un élément]
+        UC_Purge[Purger définitivement]
+    end
+
+    subgraph Decouverte[Recherche et tableau de bord]
+        UC_Search[Rechercher fichiers/dossiers]
+        UC_Dashboard[Consulter le dashboard]
+    end
+
+    subgraph Abonnement
+        UC_ViewPlans[Consulter les plans]
+        UC_Upgrade[Changer de plan]
+    end
+
+    Visiteur --> UC_Register
+    Visiteur --> UC_LoginStd
+    Visiteur --> UC_LoginOAuth
+    Visiteur --> UC_OpenLink
+    UC_OpenLink -.include.-> UC_VerifyPwd
+    UC_OpenLink --> UC_DownloadPublic
+
+    Utilisateur --> UC_Logout
+    Utilisateur --> UC_Upload
+    Utilisateur --> UC_CreateFolder
+    Utilisateur --> UC_Navigate
+    Utilisateur --> UC_Rename
+    Utilisateur --> UC_Delete
+    Utilisateur --> UC_Download
+    Utilisateur --> UC_DownloadZip
+    Utilisateur --> UC_Preview
+    UC_Preview -.extend.-> UC_StreamVideo
+    Utilisateur --> UC_CreateShare
+    UC_CreateShare -.extend.-> UC_SharePwd
+    UC_CreateShare -.extend.-> UC_ShareExp
+    Utilisateur --> UC_Revoke
+    Utilisateur --> UC_ListShares
+    Utilisateur --> UC_ListTrash
+    UC_ListTrash -.extend.-> UC_Restore
+    UC_ListTrash -.extend.-> UC_Purge
+    Utilisateur --> UC_Search
+    Utilisateur --> UC_Dashboard
+    Utilisateur --> UC_ViewPlans
+    Utilisateur --> UC_Upgrade

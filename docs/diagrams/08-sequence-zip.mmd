@@ -1,0 +1,37 @@
+sequenceDiagram
+    actor User as Utilisateur
+    participant Client as Client Web
+    participant API as API NestJS
+    participant Token as DownloadTokenService
+    participant ZipSvc as ZipService
+    participant DB as PostgreSQL
+    participant FS as Volume Docker
+
+    User->>Client: Clic "Télécharger" sur un dossier
+    Client->>API: GET /files/folders/:id/download-token (Authorization)
+    API->>API: JwtAuthGuard.canActivate()
+    API->>Token: signFolder(userId, folderId)
+    Token-->>API: jwt 60s { sub, folderId }
+    API-->>Client: 200 { token }
+    Client->>Client: Construit URL /files/folders/:id/download?token=<jwt>
+    Client->>Client: Crée <a download> + click programmé
+
+    Client->>API: GET /files/folders/:id/download?token=<jwt>
+    API->>Token: verifyFolder(token)
+    Token-->>API: payload { sub, folderId }
+
+    alt Token invalide / expiré / mauvais folderId
+        API-->>Client: 401 Unauthorized
+    else OK
+        API->>API: setHeader Content-Type application/zip
+        API->>ZipSvc: streamFolder(userId, folderId, res)
+        ZipSvc->>DB: SELECT folders + files récursif WHERE ownerId
+        DB-->>ZipSvc: arborescence
+        loop pour chaque fichier
+            ZipSvc->>FS: fs.createReadStream(storagePath)
+            FS-->>ZipSvc: stream
+            ZipSvc->>Client: archiver.append(stream, path)
+        end
+        ZipSvc->>Client: archiver.finalize() -> end of stream
+        Client-->>User: Téléchargement archive-XXXX.zip
+    end
