@@ -1,6 +1,6 @@
 # Diagrammes UML
 
-Les diagrammes sont disponibles en PNG dans `docs/diagrams/`. Les sources Mermaid (`.mmd`) sont versionnées dans le même dossier pour pouvoir régénérer les images en cas de modification (cf. [Régénérer les diagrammes](#régénérer-les-diagrammes)).
+Les diagrammes sont fournis en PNG dans `docs/diagrams/` (et `docs/diagrams/use-cases/` pour les cas d'utilisation découpés par domaine).
 
 ## Sommaire
 
@@ -44,63 +44,43 @@ Les cas d'utilisation sont scindés par domaine fonctionnel pour faciliter la le
 
 ![Vue d'ensemble des cas d'utilisation](diagrams/use-cases/00-overview.png)
 
-Source : [diagrams/use-cases/00-overview.mmd](diagrams/use-cases/00-overview.mmd)
-
 ### 1.1 Authentification
 
 ![Cas d'utilisation Authentification](diagrams/use-cases/01-authentication.png)
-
-Source : [diagrams/use-cases/01-authentication.mmd](diagrams/use-cases/01-authentication.mmd)
 
 ### 1.2 Gestion de fichiers
 
 ![Cas d'utilisation Gestion de fichiers](diagrams/use-cases/02-files.png)
 
-Source : [diagrams/use-cases/02-files.mmd](diagrams/use-cases/02-files.mmd)
-
 ### 1.3 Prévisualisation
 
 ![Cas d'utilisation Prévisualisation](diagrams/use-cases/03-preview.png)
-
-Source : [diagrams/use-cases/03-preview.mmd](diagrams/use-cases/03-preview.mmd)
 
 ### 1.4 Partage public
 
 ![Cas d'utilisation Partage public](diagrams/use-cases/04-public-share.png)
 
-Source : [diagrams/use-cases/04-public-share.mmd](diagrams/use-cases/04-public-share.mmd)
-
 ### 1.5 Partage interne entre utilisateurs
 
 ![Cas d'utilisation Partage interne](diagrams/use-cases/05-internal-share.png)
-
-Source : [diagrams/use-cases/05-internal-share.mmd](diagrams/use-cases/05-internal-share.mmd)
 
 ### 1.6 Recherche & Dashboard
 
 ![Cas d'utilisation Recherche et Dashboard](diagrams/use-cases/06-search-dashboard.png)
 
-Source : [diagrams/use-cases/06-search-dashboard.mmd](diagrams/use-cases/06-search-dashboard.mmd)
-
 ### 1.7 Corbeille
 
 ![Cas d'utilisation Corbeille](diagrams/use-cases/07-trash.png)
 
-Source : [diagrams/use-cases/07-trash.mmd](diagrams/use-cases/07-trash.mmd)
-
 ### 1.8 Abonnement & Profil
 
 ![Cas d'utilisation Abonnement et Profil](diagrams/use-cases/08-subscription.png)
-
-Source : [diagrams/use-cases/08-subscription.mmd](diagrams/use-cases/08-subscription.mmd)
 
 ---
 
 ## 2. Diagramme de classes (modèle de données)
 
 ![Diagramme de classes](diagrams/02-class-diagram.png)
-
-Source : [diagrams/02-class-diagram.mmd](diagrams/02-class-diagram.mmd)
 
 **Contraintes** :
 
@@ -117,15 +97,11 @@ Source : [diagrams/02-class-diagram.mmd](diagrams/02-class-diagram.mmd)
 
 ![Séquence Login + Refresh](diagrams/03-sequence-login.png)
 
-Source : [diagrams/03-sequence-login.mmd](diagrams/03-sequence-login.mmd)
-
 ---
 
 ## 4. Séquence : OAuth Google (web)
 
 ![Séquence OAuth Google web](diagrams/04-sequence-oauth-web.png)
-
-Source : [diagrams/04-sequence-oauth-web.mmd](diagrams/04-sequence-oauth-web.mmd)
 
 ---
 
@@ -133,23 +109,17 @@ Source : [diagrams/04-sequence-oauth-web.mmd](diagrams/04-sequence-oauth-web.mmd
 
 ![Séquence OAuth Google mobile](diagrams/05-sequence-oauth-mobile.png)
 
-Source : [diagrams/05-sequence-oauth-mobile.mmd](diagrams/05-sequence-oauth-mobile.mmd)
-
 ---
 
 ## 6. Séquence : Upload de fichier
 
 ![Séquence Upload](diagrams/06-sequence-upload.png)
 
-Source : [diagrams/06-sequence-upload.mmd](diagrams/06-sequence-upload.mmd)
-
 ---
 
 ## 7. Séquence : Création et utilisation d'un lien de partage
 
 ![Séquence Partage public](diagrams/07-sequence-share.png)
-
-Source : [diagrams/07-sequence-share.mmd](diagrams/07-sequence-share.mmd)
 
 ---
 
@@ -159,15 +129,11 @@ Le téléchargement ZIP utilise un token signé court (60s) pour pouvoir être u
 
 ![Séquence Téléchargement ZIP](diagrams/08-sequence-zip.png)
 
-Source : [diagrams/08-sequence-zip.mmd](diagrams/08-sequence-zip.mmd)
-
 ---
 
 ## 9. Diagramme de déploiement
 
 ![Diagramme de déploiement](diagrams/09-deployment.png)
-
-Source : [diagrams/09-deployment.mmd](diagrams/09-deployment.mmd)
 
 **Détails du déploiement** :
 
@@ -190,29 +156,3 @@ Source : [diagrams/09-deployment.mmd](diagrams/09-deployment.mmd)
 - `supfile-postgres` : `pg_isready` toutes les 5s.
 - `supfile-api` : `wget http://localhost:3000/api/v1/health` toutes les 5s.
 - `supfile-api` attend `supfile-postgres` healthy avant de démarrer (`depends_on`).
-
----
-
-## Régénérer les diagrammes
-
-Les diagrammes PNG sont générés à partir des sources Mermaid dans `docs/diagrams/` et `docs/diagrams/use-cases/`. Pour les régénérer après modification d'un `.mmd` :
-
-```bash
-# Diagrammes principaux (classes, séquences, déploiement)
-cd docs/diagrams
-for f in *.mmd; do
-  npx -y -p @mermaid-js/mermaid-cli mmdc -i "$f" -o "${f%.mmd}.png" -t neutral -b transparent -w 1600
-done
-
-# Cas d'utilisation (un fichier par domaine fonctionnel)
-cd use-cases
-for f in *.mmd; do
-  npx -y -p @mermaid-js/mermaid-cli mmdc -i "$f" -o "${f%.mmd}.png" -t neutral -b transparent -w 1400
-done
-```
-
-Options :
-
-- `-t neutral` : thème neutre (lisible en clair et sombre)
-- `-b transparent` : fond transparent
-- `-w 1600` ou `1400` : largeur pour une haute résolution
